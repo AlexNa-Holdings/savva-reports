@@ -2,6 +2,7 @@ package pdf
 
 import (
 	"github.com/AlexNa-Holdings/savva-reports/assets"
+	"github.com/AlexNa-Holdings/savva-reports/data"
 	"github.com/AlexNa-Holdings/savva-reports/i18n"
 	"github.com/rs/zerolog/log"
 	"github.com/signintech/gopdf"
@@ -36,6 +37,9 @@ type Doc struct { // Extended gopdf.GoPdf
 	skip_newline          bool
 	style                 Style
 	styles                []Style
+
+	// data
+	History []data.HistoryRecord
 }
 
 func NewDoc(user_addr, locale string) (*Doc, error) {
@@ -110,4 +114,11 @@ func (doc *Doc) restoreStyle() {
 		doc.style.FontColor.G,
 		doc.style.FontColor.B,
 	)
+}
+
+func (doc *Doc) GetMarginWidth() float64 {
+	return doc.pageWidth - doc.margin_left - doc.margin_right
+}
+func (doc *Doc) GetMarginHeight() float64 {
+	return doc.pageHeight - doc.margin_top - doc.margin_bottom
 }

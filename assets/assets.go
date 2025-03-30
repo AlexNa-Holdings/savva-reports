@@ -47,6 +47,10 @@ var LogoSavvaImg image.Image
 var Cover []byte
 var CoverImg image.Image
 
+//go:embed images/page_bg.png
+var PageBg []byte
+var PageBgImg image.Image
+
 func ProcessAssets() error {
 	var err error
 
@@ -65,6 +69,12 @@ func ProcessAssets() error {
 	AvatarDefaultImg, _, err = image.Decode(bytes.NewReader(AvatarDefault))
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to decode default avatar image")
+		return err
+	}
+
+	PageBgImg, _, err = image.Decode(bytes.NewReader(PageBg))
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to decode page background image")
 		return err
 	}
 

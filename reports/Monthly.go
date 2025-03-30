@@ -79,7 +79,7 @@ func monthlyCoverPage(doc *pdf.Doc, year, month int) error {
 	doc.SetFont("DejaVuBold", "", 40)
 	// doc.SetTextColor(0xc4, 0x58, 0) //Dark SAVVA
 	doc.SetTextColor(0, 0, 0) //Dark SAVVA
-	doc.TextCentered(strings.ToUpper(user.Name), cmn.PageWidth/2, cmn.PageHeight-120)
+	doc.TextCentered(strings.ToUpper(user.Name), 0, cmn.PageHeight-120)
 
 	doc.SetFont("DejaVuBold", "", 20)
 	// print address in form 0x1234...1234
@@ -87,7 +87,10 @@ func monthlyCoverPage(doc *pdf.Doc, year, month int) error {
 		cmn.PageWidth/2, cmn.PageHeight-95)
 
 	doc.SetFont("Mono", "", 10)
-	doc.TextCentered(fmt.Sprintf("Generated on: %s", time.Now().Format(time.RFC3339)), cmn.PageWidth/2, cmn.PageHeight-70)
+	doc.TextCentered(fmt.Sprintf("Generated on: %s",
+		time.Now().UTC().Format(time.RFC822)),
+		0,
+		cmn.PageHeight-70)
 
 	doc.AddBlankPage()
 
