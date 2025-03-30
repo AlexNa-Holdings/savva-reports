@@ -15,8 +15,8 @@ type Table struct {
 var HeaderStyle = &Style{
 	FontName:  "DejaVuBold",
 	FontSize:  12,
-	FontColor: &Color{0, 0, 0},
-	BGColor:   &SAVVA_COLOR,
+	FontColor: &Color{0xf7, 0xf7, 0xf7},
+	BGColor:   &SAVVA_DARK_COLOR,
 	Align:     'C',
 	Padding:   Padding{left: 5, top: 4, right: 5, bottom: 6},
 }
@@ -25,6 +25,7 @@ var DefaultStyle = &Style{
 	FontName:  "Arial",
 	FontSize:  12,
 	FontColor: &Color{0, 0, 0},
+	Padding:   Padding{left: 5, top: 4, right: 0, bottom: 6},
 	Align:     'L',
 }
 
@@ -107,23 +108,92 @@ func (doc *Doc) WriteTable(t *Table) {
 	}
 
 	table_y := doc.GetY()
+	y := table_y
+	last_row_y := y
 
 	header_height := doc.estimateHeaderHeight(t)
+	first_row_height := doc.estimateRowHeight(t, 0)
 
-	if header_height > 0 {
-		//Fiil the bg color
+	if doc.GetY()+header_height+first_row_height > doc.pageHeight-doc.margin_bottom {
+		doc.NextPage()
+		table_y = doc.GetY()
+		y = table_y
+	}
+
+	if header_height > 0 { // Write header
 		if HeaderStyle.BGColor != nil {
 			doc.SetFillColor(HeaderStyle.BGColor.R, HeaderStyle.BGColor.G, HeaderStyle.BGColor.B)
-			doc.Rectangle(table_x, table_y-+header_height, table_x+total_width, table_y, "F", 0, 0)
+			doc.SetStrokeColor(HeaderStyle.BGColor.R, HeaderStyle.BGColor.G, HeaderStyle.BGColor.B)
+			doc.SetLineWidth(0.5)
+			doc.Rectangle(table_x, y-header_height, table_x+total_width, y, "DF", 0, 0)
 		}
 
 		x := table_x
 		for i, text := range t.Header {
-			doc.writeTextInWidth(text, x, table_y, t.ColWidths[i], HeaderStyle)
+			doc.writeTextInWidth(text, x, y, t.ColWidths[i], HeaderStyle)
 			x += t.ColWidths[i]
 		}
-		doc.SetY(doc.GetY() + header_height)
+		y += header_height
 	}
+
+	for i, row := range t.Cells {
+		row_height := doc.estimateRowHeight(t, i)
+		if y+row_height > doc.pageHeight-doc.margin_bottom {
+			// may be add later ..continue to next page
+
+			// Draw the border around the table
+			doc.SetStrokeColor(HeaderStyle.BGColor.R, HeaderStyle.BGColor.G, HeaderStyle.BGColor.B)
+			doc.SetLineWidth(0.5)
+			// vertical lines
+			var v_x = table_x
+			for i := 0; i < t.W; i++ {
+				doc.Line(v_x, table_y, v_x, last_row_y)
+				v_x += t.ColWidths[i]
+			}
+			doc.Line(v_x, table_y, v_x, last_row_y)                        // right
+			doc.Line(table_x, last_row_y, table_x+total_width, last_row_y) // bottom
+
+			doc.NextPage()
+			table_y = doc.GetY()
+			y = table_y
+			if header_height > 0 { // Write header
+				if HeaderStyle.BGColor != nil {
+					doc.SetFillColor(HeaderStyle.BGColor.R, HeaderStyle.BGColor.G, HeaderStyle.BGColor.B)
+					doc.SetStrokeColor(HeaderStyle.BGColor.R, HeaderStyle.BGColor.G, HeaderStyle.BGColor.B)
+					doc.SetLineWidth(0.5)
+					doc.Rectangle(table_x, y-header_height, table_x+total_width, y, "DF", 0, 0)
+				}
+
+				x := table_x
+				for i, text := range t.Header {
+					doc.writeTextInWidth(text, x, y, t.ColWidths[i], HeaderStyle)
+					x += t.ColWidths[i]
+				}
+				y += header_height
+			}
+		}
+
+		x := table_x
+		for j, text := range row {
+			doc.writeTextInWidth(text, x, y, t.ColWidths[j], &t.ColStyle[j])
+			x += t.ColWidths[j]
+		}
+
+		last_row_y = y
+		y += row_height
+	}
+
+	// Draw the border around the table
+	doc.SetStrokeColor(HeaderStyle.BGColor.R, HeaderStyle.BGColor.G, HeaderStyle.BGColor.B)
+	doc.SetLineWidth(0.5)
+	// vertical lines
+	var v_x = table_x
+	for i := 0; i < t.W; i++ {
+		doc.Line(v_x, table_y, v_x, last_row_y)
+		v_x += t.ColWidths[i]
+	}
+	doc.Line(v_x, table_y, v_x, last_row_y)                        // right
+	doc.Line(table_x, last_row_y, table_x+total_width, last_row_y) // bottom
 
 }
 
@@ -137,4 +207,17 @@ func (doc *Doc) estimateHeaderHeight(t *Table) float64 {
 	}
 
 	return header_height
+}
+
+func (doc *Doc) estimateRowHeight(t *Table, row int) float64 {
+	if row >= len(t.Cells) {
+		return 0
+	}
+
+	row_height := 0.
+	for i, text := range t.Cells[row] {
+		row_height = max(row_height, doc.estimateTextHeight(text, t.ColWidths[i], &t.ColStyle[i]))
+	}
+
+	return row_height
 }

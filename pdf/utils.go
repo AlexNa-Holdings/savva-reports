@@ -38,15 +38,14 @@ func (doc *Doc) TextWidthStyle(text string, x, y, w float64, style *Style) {
 
 	switch style.Align {
 	case 'L':
-		doc.TextLeft(text, x, y)
+		doc.TextLeft(text, x+style.Padding.left, y)
 	case 'C':
-		doc.TextCentered(text, x+w/2, y)
+		doc.TextCentered(text, x+style.Padding.left+w/2, y)
 	case 'R':
-		doc.TextRight(text, x+w, y)
+		doc.TextRight(text, x+w-style.Padding.right, y)
 	default:
-		doc.TextLeft(text, x, y)
+		doc.TextLeft(text, x+style.Padding.left, y)
 	}
-
 }
 
 func (doc *Doc) AddBlankPage() {
@@ -75,6 +74,7 @@ func (doc *Doc) NextPage() {
 
 	doc.SetX(doc.margin_left)
 	doc.SetY(doc.margin_top)
+	doc.NewLine()
 
 }
 
@@ -162,7 +162,7 @@ func (doc *Doc) writeTextInWidth(text string, x, y, width float64, style *Style)
 	doc.saveStyle()
 	defer doc.restoreStyle()
 
-	x += style.Padding.left
+	width -= style.Padding.left + style.Padding.right
 	y -= style.Padding.bottom
 
 	// Set desired style for text
@@ -191,8 +191,16 @@ func (doc *Doc) writeTextInWidth(text string, x, y, width float64, style *Style)
 		}
 
 		if lineWidth+additionalWidth > float64(width) {
-			// Write current line to PDF
-			doc.TextWidthStyle(line, x, y, width, style)
+			switch style.Align {
+			case 'L':
+				doc.TextLeft(line, x+style.Padding.left, y)
+			case 'C':
+				doc.TextCentered(line, x+style.Padding.left+width/2, y)
+			case 'R':
+				doc.TextRight(line, x+width-style.Padding.right, y)
+			default:
+				doc.TextLeft(line, x+style.Padding.left, y)
+			}
 
 			line = word
 			lineWidth = wordWidth
@@ -215,7 +223,16 @@ func (doc *Doc) writeTextInWidth(text string, x, y, width float64, style *Style)
 
 	// Write the last remaining line
 	if line != "" {
-		doc.TextWidthStyle(line, x, y, width, style)
+		switch style.Align {
+		case 'L':
+			doc.TextLeft(line, x+style.Padding.left, y)
+		case 'C':
+			doc.TextCentered(line, x+style.Padding.left+width/2, y)
+		case 'R':
+			doc.TextRight(line, x+width-style.Padding.right, y)
+		default:
+			doc.TextLeft(line, x+style.Padding.left, y)
+		}
 	}
 }
 
