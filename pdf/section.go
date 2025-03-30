@@ -24,14 +24,14 @@ func (doc *Doc) NewSection(title string) {
 	doc.SetFont("DejaVuBold", "", 24)
 	doc.SetTextColor(0, 0, 0) // Black
 
-	doc.TextCentered(title, 0, doc.cy)
+	doc.TextCentered(title, 0, doc.GetY())
 
-	doc.cy += 20 // Add some space below the title
+	doc.SetY(doc.GetY() + 20) // Add some space below the title
 
 	// Draw a line under the title
 	doc.SetLineWidth(1)
-	doc.Line(doc.margin_left, doc.cy, doc.pageWidth-doc.margin_right, doc.cy)
+	doc.Line(doc.margin_left, doc.GetY(), doc.pageWidth-doc.margin_right, doc.GetY())
 
-	doc.cy += 60
+	doc.SetY(doc.GetY() + 60)
 
 }

@@ -8,10 +8,17 @@ import (
 	"github.com/signintech/gopdf"
 )
 
+type Padding struct {
+	left, top, right, bottom float64
+}
+
 type Style struct {
 	FontName  string
 	FontSize  float64
-	FontColor Color
+	FontColor *Color
+	BGColor   *Color
+	Padding   Padding
+	Align     uint8 // 'L', 'C', 'R'
 }
 
 type Color struct {
@@ -26,7 +33,6 @@ type Doc struct { // Extended gopdf.GoPdf
 	Locale                string
 	CurentPage            int
 	UserAddress           string
-	cx, cy                float64 // Current X and Y coordinates
 	margin_left           float64
 	margin_right          float64
 	margin_top            float64
@@ -52,7 +58,7 @@ func NewDoc(user_addr, locale string) (*Doc, error) {
 		style: Style{
 			FontName:  "Arial",
 			FontSize:  12,
-			FontColor: Color{0, 0, 0},
+			FontColor: &Color{0, 0, 0},
 		},
 		indentWidth: 20,
 	}
@@ -91,7 +97,7 @@ func (doc *Doc) setFont(fontName string, size float64) {
 	doc.style.FontSize = float64(size)
 }
 
-func (doc *Doc) SetColor(c Color) {
+func (doc *Doc) SetColor(c *Color) {
 	doc.SetTextColor(c.R, c.G, c.B)
 	doc.style.FontColor = c
 }

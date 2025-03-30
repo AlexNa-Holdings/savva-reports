@@ -33,6 +33,22 @@ func (doc *Doc) TextRight(text string, x, y float64) {
 	doc.Text(text)
 }
 
+func (doc *Doc) TextWidthStyle(text string, x, y, w float64, style *Style) {
+	doc.setFont(style.FontName, style.FontSize)
+
+	switch style.Align {
+	case 'L':
+		doc.TextLeft(text, x, y)
+	case 'C':
+		doc.TextCentered(text, x+w/2, y)
+	case 'R':
+		doc.TextRight(text, x+w, y)
+	default:
+		doc.TextLeft(text, x, y)
+	}
+
+}
+
 func (doc *Doc) AddBlankPage() {
 	doc.AddPage()
 	doc.SetTextColor(0xff, 0xff, 0xff)
@@ -54,11 +70,12 @@ func (doc *Doc) NextPage() {
 		doc.margin_right = 40
 	}
 
-	doc.cx = doc.margin_left
-	doc.cy = doc.margin_top
-
 	doc.Header()
 	doc.Footer()
+
+	doc.SetX(doc.margin_left)
+	doc.SetY(doc.margin_top)
+
 }
 
 func (doc *Doc) Header() {
@@ -83,15 +100,15 @@ func (doc *Doc) Footer() {
 }
 
 func (doc *Doc) NewLine() {
-	doc.cy += doc.style.FontSize * 1.3
-	doc.cx = doc.margin_left + float64(doc.indent)*doc.indentWidth
+	doc.SetY(doc.GetY() + doc.style.FontSize*1.3)
+	doc.SetX(doc.margin_left + float64(doc.indent)*doc.indentWidth)
 
 	// Check page boundary
-	if doc.cy > doc.pageHeight-doc.margin_bottom {
+	if doc.GetY() > doc.pageHeight-doc.margin_bottom {
 		doc.NextPage()
 	}
 
-	log.Debug().Msgf("NewLine: cx=%f, cy=%f", doc.cx, doc.cy)
+	log.Debug().Msgf("NewLine: cx=%f, cy=%f", doc.GetX(), doc.GetY())
 }
 
 func (doc *Doc) NewNLines(n int) {
@@ -105,6 +122,8 @@ func (doc *Doc) estimateTextHeight(text string, width float64, style *Style) flo
 	// Save original document style
 	doc.saveStyle()
 	defer doc.restoreStyle()
+
+	width = width - style.Padding.left - style.Padding.right
 
 	// Apply temporary style for measurement
 	doc.setFont(style.FontName, style.FontSize)
@@ -134,14 +153,17 @@ func (doc *Doc) estimateTextHeight(text string, width float64, style *Style) flo
 		}
 	}
 
-	return lineHeight * float64(lines)
+	return lineHeight*float64(lines) + style.Padding.top + style.Padding.bottom
 }
 
-// writeTextInWidth writes text at the current (doc.cx, doc.cy) within the specified width, using provided style.
-func (doc *Doc) writeTextInWidth(text string, width float64, style *Style) {
+// writeTextInWidth writes text at the x, y within the specified width, using provided style.
+func (doc *Doc) writeTextInWidth(text string, x, y, width float64, style *Style) {
 	// Save original style to restore later.
 	doc.saveStyle()
 	defer doc.restoreStyle()
+
+	x += style.Padding.left
+	y -= style.Padding.bottom
 
 	// Set desired style for text
 	doc.setFont(style.FontName, style.FontSize)
@@ -170,16 +192,16 @@ func (doc *Doc) writeTextInWidth(text string, width float64, style *Style) {
 
 		if lineWidth+additionalWidth > float64(width) {
 			// Write current line to PDF
-			doc.writeText(line)
+			doc.TextWidthStyle(line, x, y, width, style)
+
 			line = word
 			lineWidth = wordWidth
 
 			// Move to next line
-			doc.cx = doc.margin_left
-			doc.cy += lineHeight
+			y += lineHeight
 
 			// Page break check
-			if doc.cy > doc.pageHeight-doc.margin_bottom {
+			if doc.GetY() > doc.pageHeight-doc.margin_bottom {
 				doc.NextPage()
 			}
 		} else {
@@ -193,8 +215,7 @@ func (doc *Doc) writeTextInWidth(text string, width float64, style *Style) {
 
 	// Write the last remaining line
 	if line != "" {
-		doc.writeText(line)
-		doc.cx += lineWidth
+		doc.TextWidthStyle(line, x, y, width, style)
 	}
 }
 
@@ -212,21 +233,21 @@ func (doc *Doc) writeText(text string) {
 	}
 
 	for len(words) > 0 {
-		maxWidth := doc.pageWidth - doc.margin_right - doc.cx
+		maxWidth := doc.pageWidth - doc.margin_right - doc.GetX()
 		line, line_width, remainingWords := doc.wrapText(words, maxWidth)
 		words = remainingWords
 
 		// Check for page break
-		if doc.cy > doc.pageHeight-doc.margin_bottom {
+		if doc.GetY() > doc.pageHeight-doc.margin_bottom {
 			doc.NextPage()
 		}
 
-		doc.SetXY(doc.cx, doc.cy)
+		doc.SetXY(doc.GetX(), doc.GetY())
 		doc.Text(line)
 		if len(remainingWords) > 0 {
 			doc.NewLine()
 		} else {
-			doc.cx += line_width
+			doc.SetX(doc.GetX() + line_width)
 		}
 	}
 

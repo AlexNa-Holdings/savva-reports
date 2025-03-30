@@ -73,7 +73,7 @@ func (doc *Doc) handleElementStart(n *html.Node) {
 
 	case "strong":
 		doc.setFont("TimesBold", 14)
-		doc.SetColor(SAVVA_DARK_COLOR)
+		doc.SetColor(&SAVVA_DARK_COLOR)
 	case "em":
 		doc.setFont("TimesBold", 14)
 	case "ul", "ol":

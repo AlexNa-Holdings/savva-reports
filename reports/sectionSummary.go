@@ -24,7 +24,10 @@ func addSectionSummary(doc *pdf.Doc, from, to time.Time) {
 
 	t := pdf.NewTable()
 	t.SetHeader(doc.T("description"), "SAVVA", cmn.C.CurrencySymbol)
+	t.ColWidths = []float64{0, 100, 100}
 
 	t.AddRow("description", "123", "567")
+
+	doc.WriteTable(t)
 
 }
