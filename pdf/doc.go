@@ -7,11 +7,35 @@ import (
 	"github.com/signintech/gopdf"
 )
 
+type Style struct {
+	FontName  string
+	FontSize  float64
+	FontColor Color
+}
+
+type Color struct {
+	R, G, B uint8
+}
+
+var SAVVA_COLOR Color = Color{0xff, 0x71, 0x00}
+var SAVVA_DARK_COLOR Color = Color{0xc4, 0x80, 0x00}
+
 type Doc struct { // Extended gopdf.GoPdf
 	*gopdf.GoPdf
-	Locale      string
-	CurentPage  int
-	UserAddress string
+	Locale                string
+	CurentPage            int
+	UserAddress           string
+	cx, cy                float64 // Current X and Y coordinates
+	margin_left           float64
+	margin_right          float64
+	margin_top            float64
+	margin_bottom         float64
+	pageWidth, pageHeight float64
+	indent                int
+	indentWidth           float64
+	skip_newline          bool
+	style                 Style
+	styles                []Style
 }
 
 func NewDoc(user_addr, locale string) (*Doc, error) {
@@ -21,8 +45,16 @@ func NewDoc(user_addr, locale string) (*Doc, error) {
 		UserAddress: user_addr,
 		Locale:      locale,
 		CurentPage:  0,
+		style: Style{
+			FontName:  "Arial",
+			FontSize:  12,
+			FontColor: Color{0, 0, 0},
+		},
+		indentWidth: 20,
 	}
 	doc.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
+
+	doc.pageWidth, doc.pageHeight = gopdf.PageSizeA4.W, gopdf.PageSizeA4.H
 
 	// Load all fonts
 	for name, font := range assets.AllFonts {
@@ -45,4 +77,37 @@ func NewDoc(user_addr, locale string) (*Doc, error) {
 
 func (doc *Doc) T(key string) string {
 	return i18n.T(key, doc.Locale)
+}
+
+func (doc *Doc) setFont(fontName string, size float64) {
+	if err := doc.SetFont(fontName, "", size); err != nil {
+		log.Error().Err(err).Msgf("Failed to set font %s", fontName)
+	}
+	doc.style.FontName = fontName
+	doc.style.FontSize = float64(size)
+}
+
+func (doc *Doc) SetColor(c Color) {
+	doc.SetTextColor(c.R, c.G, c.B)
+	doc.style.FontColor = c
+}
+
+func (doc *Doc) saveStyle() {
+	doc.styles = append(doc.styles, doc.style)
+}
+
+func (doc *Doc) restoreStyle() {
+	if len(doc.styles) == 0 {
+		log.Error().Msg("No styles to restore")
+		return
+	}
+	doc.style = doc.styles[len(doc.styles)-1]
+	doc.styles = doc.styles[:len(doc.styles)-1]
+
+	doc.setFont(doc.style.FontName, doc.style.FontSize)
+	doc.SetTextColor(
+		doc.style.FontColor.R,
+		doc.style.FontColor.G,
+		doc.style.FontColor.B,
+	)
 }

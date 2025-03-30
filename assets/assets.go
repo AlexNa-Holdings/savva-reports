@@ -16,6 +16,9 @@ var FontAreal []byte
 //go:embed fonts/Times.ttf
 var FontTimes []byte
 
+//go:embed fonts/TimesBold.ttf
+var FontTimesBold []byte
+
 //go:embed fonts/Mono.ttf
 var FontMono []byte
 
@@ -25,6 +28,7 @@ var FontDejaVuBold []byte
 var AllFonts = map[string][]byte{
 	"Arial":      FontAreal,
 	"Times":      FontTimes,
+	"TimesBold":  FontTimesBold,
 	"Mono":       FontMono,
 	"DejaVuBold": FontDejaVuBold,
 }

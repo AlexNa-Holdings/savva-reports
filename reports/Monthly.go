@@ -33,6 +33,8 @@ func Build(user_addr string, year, month int, output_path string, locale string)
 		return fmt.Errorf("error creating cover page: %w", err)
 	}
 
+	addSectionLegal(doc)
+
 	time_from := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
 	time_to := time.Date(year, time.Month(month+1), 1, 0, 0, 0, 0, time.UTC)
 	addSectionSummary(doc, time_from, time_to)
