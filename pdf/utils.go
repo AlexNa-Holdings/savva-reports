@@ -338,9 +338,9 @@ func FormatValue(amount *big.Int, decimals int) string {
 	}
 	str = str[:len(str)-decimals] + "." + decimal
 
-	// Trim trailing zeros and the decimal point if necessary
-	str = strings.TrimRight(str, "0")
-	str = strings.TrimRight(str, ".")
+	// // Trim trailing zeros and the decimal point if necessary
+	// str = strings.TrimRight(str, "0")
+	// str = strings.TrimRight(str, ".")
 
 	// Add commas to the integer part
 	parts := strings.Split(str, ".")

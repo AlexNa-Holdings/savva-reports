@@ -33,7 +33,19 @@ var lang_ru = Language{
 
 * **Колебания цен:** Цена токена SAVVA может и будет непредсказуемо меняться, и прошлые результаты не являются показателем будущих результатов.
 `,
-		"description":      "Описание",
-		"summary.savva_in": "Получено SAVVA",
+		"description":                  "Описание",
+		"summary.savva_in":             "Зачислено на счет",
+		"summary.savva_out":            "Выведено со счета",
+		"summary.donations_contribute": "Пожертвования внесены",
+		"summary.donations_received":   "Пожертвования получены",
+		"summary.fund_contributed":     "Фонд внесен",
+		"summary.fund_prizes_won":      "Фонд выигранные призы",
+		"summary.staking_in":           "Ставка внесена",
+		"summary.staking_out":          "Ставка выведена",
+		"summary.staking_staked":       "Добавлено в ставку",
+		"summary.club_buy":             "Потрачено на спонсирование авторов",
+		"summary.club_claimed":         "Получено от спонсора",
+		"summary.club_earned":          "Заработано на спонсорстве",
+		"summary.club_spent":           "Потрачено на спонсорство",
 	},
 }

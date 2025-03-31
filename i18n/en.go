@@ -33,8 +33,18 @@ var lang_en = Language{
 
 * **Price Fluctuations:** The price of the SAVVA token can and will change unpredictably, and past performance is not indicative of future results.
 `,
-		"description":      "Description",
-		"summary.savva_in": "SAVVA Received",
+		"description":                  "Description",
+		"summary.savva_in":             "Deposited to the account",
+		"summary.savva_out":            "Sent from the account",
+		"summary.donations_contribute": "Donations Contributed",
+		"summary.donations_received":   "Donations Received",
+		"summary.fund_contributed":     "Fund Contributed",
+		"summary.fund_prizes_won":      "Fund Prizes Won",
+		"summary.staking_in":           "Staking Deposited",
+		"summary.staking_out":          "Staking Withdrawn",
+		"summary.staking_staked":       "Added to staking",
+		"summary.club_buy":             "Spent on sponsoring authors",
+		"summary.club_claimed":         "Receved from sponsors",
 	},
 }
 
