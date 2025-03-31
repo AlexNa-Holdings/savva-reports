@@ -25,7 +25,11 @@ type HistoryRecord struct {
 }
 
 func GetHistory(address string, from, to *time.Time) ([]HistoryRecord, error) {
-	rows, err := cmn.C.DB.Query(`SELECT contract, domain, type, from_addr, to_addr, amount, token, savva_cid, locales, info, tx_hash, time_stamp FROM history WHERE from_addr = $1 AND time_stamp BETWEEN $2 AND $3 ORDER BY time_stamp DESC`, address, from, to)
+	rows, err := cmn.C.DB.Query(`SELECT contract, domain, type, from_addr, to_addr, amount, token, savva_cid, locales, info, tx_hash, time_stamp 
+	FROM history 
+	WHERE 
+	( from_addr = $1 OR to_addr = $1 )
+	 AND time_stamp BETWEEN $2 AND $3 ORDER BY time_stamp DESC`, address, from, to)
 	if err != nil {
 		log.Printf("Error querying history for %s: %v", address, err)
 		return nil, err

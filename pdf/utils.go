@@ -2,6 +2,8 @@ package pdf
 
 import (
 	"fmt"
+	"math"
+	"math/big"
 	"strings"
 	"time"
 
@@ -298,4 +300,130 @@ func (doc *Doc) wrapText(words []string, maxWidth float64) (string, float64, []s
 	}
 
 	return line, lineWidth, nil
+}
+func Value2Float(v *big.Int, decimals int) float64 {
+	if v == nil || v.Cmp(big.NewInt(0)) == 0 {
+		return 0
+	}
+
+	// Convert v to big.Float
+	f := new(big.Float).SetInt(v)
+
+	// Calculate divisor = 10^decimals as big.Float
+	divisor := new(big.Float).SetFloat64(math.Pow(10, float64(decimals)))
+
+	// Divide value by divisor
+	f.Quo(f, divisor)
+
+	// Convert to float64
+	value, _ := f.Float64()
+
+	return value
+}
+
+func FormatValue(amount *big.Int, decimals int) string {
+	var precision = 2
+	str := amount.String()
+
+	if len(str) <= decimals {
+		str = strings.Repeat("0", decimals-len(str)+1) + str
+	}
+
+	decimal := str[len(str)-decimals:]
+	// make sure we exactly 'precision" digits after the decimal point
+	if len(decimal) > precision {
+		decimal = decimal[:precision]
+	} else if len(decimal) < precision {
+		decimal = decimal + strings.Repeat("0", precision-len(decimal))
+	}
+	str = str[:len(str)-decimals] + "." + decimal
+
+	// Trim trailing zeros and the decimal point if necessary
+	str = strings.TrimRight(str, "0")
+	str = strings.TrimRight(str, ".")
+
+	// Add commas to the integer part
+	parts := strings.Split(str, ".")
+	intPart := parts[0]
+	fracPart := ""
+	if len(parts) > 1 {
+		fracPart = parts[1]
+	}
+
+	intPartWithCommas := ""
+	n := len(intPart)
+	for i, ch := range intPart {
+		if i > 0 && (n-i)%3 == 0 {
+			intPartWithCommas += ","
+		}
+		intPartWithCommas += string(ch)
+	}
+
+	if fracPart != "" {
+		return intPartWithCommas + "." + fracPart
+	}
+	return intPartWithCommas
+}
+
+func FormatFloat(value float64) string {
+	switch {
+	case value == 0:
+		return "0"
+	case value < 0.01:
+		return fmt.Sprintf("%.4f", value)
+	case value < 1:
+		return fmt.Sprintf("%.2f", value)
+	default:
+		return addCommas(fmt.Sprintf("%.0f", value))
+	}
+}
+
+// addCommas adds commas to a numeric string.
+func addCommas(number string) string {
+	var result strings.Builder
+	n := len(number)
+
+	for i, digit := range number {
+		if (n-i)%3 == 0 && i != 0 {
+			result.WriteRune(',')
+		}
+		result.WriteRune(digit)
+	}
+
+	return result.String()
+}
+
+func (doc *Doc) FormatValue(amount *big.Int, decimals int) string {
+	str := FormatValue(amount, decimals)
+
+	if doc.Locale == "ru" {
+		//replace . -> ' ', . -> ,
+		str = strings.ReplaceAll(str, ".", " ")
+		str = strings.ReplaceAll(str, ",", ".")
+	}
+
+	return str
+}
+
+func (doc *Doc) FormatFloat(value float64) string {
+	str := FormatFloat(value)
+
+	if doc.Locale == "ru" {
+		//replace . -> ' ', . -> ,
+		str = strings.ReplaceAll(str, ".", " ")
+		str = strings.ReplaceAll(str, ",", ".")
+	}
+	return str
+}
+
+func (doc *Doc) FormatFiat(value float64) string {
+	str := fmt.Sprintf("%.2f", value)
+
+	if doc.Locale == "ru" {
+		//replace . -> ' ', . -> ,
+		str = strings.ReplaceAll(str, ".", " ")
+		str = strings.ReplaceAll(str, ",", ".")
+	}
+
+	return cmn.C.CurrencySymbol + str
 }

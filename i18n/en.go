@@ -33,7 +33,8 @@ var lang_en = Language{
 
 * **Price Fluctuations:** The price of the SAVVA token can and will change unpredictably, and past performance is not indicative of future results.
 `,
-		"description": "Description",
+		"description":      "Description",
+		"summary.savva_in": "SAVVA Received",
 	},
 }
 
