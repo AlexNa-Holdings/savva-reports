@@ -15,7 +15,7 @@ func (doc *Doc) TextCentered(text string, x, y float64) {
 	// Center the text horizontally
 
 	if x == 0 { // use center of margins
-		x = (doc.pageWidth-doc.margin_left-doc.margin_right)/2 + doc.margin_left
+		x = (doc.pageWidth-doc.margins.Left-doc.margins.Right)/2 + doc.margins.Left
 	}
 	textWidth, _ := doc.MeasureTextWidth(text)
 	doc.SetXY(x-(textWidth/2), y)
@@ -60,22 +60,22 @@ func (doc *Doc) NextPage() {
 	doc.AddPage()
 	doc.CurentPage++
 
-	doc.margin_top = 80
-	doc.margin_bottom = 60
+	doc.margins.Top = 80
+	doc.margins.Bottom = 60
 
 	if doc.CurentPage&1 == 1 {
-		doc.margin_left = 40
-		doc.margin_right = 60
+		doc.margins.Left = 40
+		doc.margins.Right = 60
 	} else {
-		doc.margin_left = 60
-		doc.margin_right = 40
+		doc.margins.Left = 60
+		doc.margins.Right = 40
 	}
 
 	doc.Header()
 	doc.Footer()
 
-	doc.SetX(doc.margin_left)
-	doc.SetY(doc.margin_top)
+	doc.SetX(doc.margins.Left)
+	doc.SetY(doc.margins.Top)
 	doc.NewLine()
 
 }
@@ -87,9 +87,9 @@ func (doc *Doc) Header() {
 	doc.SetFont("Arial", "", 12)
 
 	if doc.CurentPage&1 == 1 {
-		doc.TextRight(text, doc.pageWidth-doc.margin_right+20, doc.margin_top-20)
+		doc.TextRight(text, doc.pageWidth-doc.margins.Right+20, doc.margins.Top-20)
 	} else {
-		doc.TextLeft(text, doc.margin_left-20, doc.margin_top-20)
+		doc.TextLeft(text, doc.margins.Left-20, doc.margins.Top-20)
 	}
 }
 func (doc *Doc) Footer() {
@@ -98,15 +98,15 @@ func (doc *Doc) Footer() {
 	doc.TextCentered(fmt.Sprintf("Generated on: %s",
 		time.Now().UTC().Format(time.RFC822)),
 		0,
-		cmn.PageHeight-doc.margin_bottom+10)
+		cmn.PageHeight-doc.margins.Bottom+10)
 }
 
 func (doc *Doc) NewLine() {
 	doc.SetY(doc.GetY() + doc.style.FontSize*1.3)
-	doc.SetX(doc.margin_left + float64(doc.indent)*doc.indentWidth)
+	doc.SetX(doc.margins.Left + float64(doc.indent)*doc.indentWidth)
 
 	// Check page boundary
-	if doc.GetY() > doc.pageHeight-doc.margin_bottom {
+	if doc.GetY() > doc.pageHeight-doc.margins.Bottom {
 		doc.NextPage()
 	}
 
@@ -218,7 +218,7 @@ func (doc *Doc) writeTextInWidth(text string, x, y, width float64, style *Style)
 			y += lineHeight
 
 			// Page break check
-			if doc.GetY() > doc.pageHeight-doc.margin_bottom {
+			if doc.GetY() > doc.pageHeight-doc.margins.Bottom {
 				doc.NextPage()
 			}
 		} else {

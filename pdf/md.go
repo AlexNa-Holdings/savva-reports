@@ -20,7 +20,7 @@ func (doc *Doc) MarkDownToPdf(md string) error {
 
 	// doc.NewLine()
 
-	return doc.MarkDownToPdfEx(md, doc.margin_left, doc.GetY(), doc.GetMarginWidth(), doc.GetMarginHeight()-doc.GetY(), true)
+	return doc.MarkDownToPdfEx(md, doc.margins.Left, doc.GetY(), doc.GetMarginWidth(), doc.GetMarginHeight()-doc.GetY(), true)
 }
 
 func (doc *Doc) MarkDownToPdfEx(md string, x, y, w, h float64, auto_page bool) error {
@@ -60,7 +60,7 @@ func (doc *Doc) renderNode(n *html.Node, x, y, w, h float64, auto_page bool) {
 	}
 
 	if n.Type == html.ElementNode {
-		doc.handleElementEnd(n)
+		doc.handleElementEnd(n, x)
 	}
 }
 
@@ -87,7 +87,7 @@ func (doc *Doc) writeText(text string, x, y, w, h float64, auto_page bool) (floa
 		if doc.GetY() > y+h {
 			if auto_page {
 				doc.NextPage()
-				x = doc.margin_left
+				x = doc.margins.Left
 				w = doc.GetMarginWidth()
 				h = doc.GetMarginHeight() - doc.GetY()
 				return x, y, w, h
@@ -150,7 +150,7 @@ func (doc *Doc) handleElementStart(n *html.Node, x float64) {
 	}
 }
 
-func (doc *Doc) handleElementEnd(n *html.Node) {
+func (doc *Doc) handleElementEnd(n *html.Node, x float64) {
 	log.Debug().Msgf("> %s", n.Data)
 
 	switch n.Data {

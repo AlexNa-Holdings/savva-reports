@@ -89,8 +89,9 @@ func addSectionMyAuthors(doc *pdf.Doc, from, to time.Time) {
 			}
 
 			info += doc.T("total") + ": \n" + doc.FormatValue(s.TotalAmount, 18) + " SAVVA\n" + doc.FormatFiat(fiat) + "\n"
-			myshare := new(big.Int).Div(new(big.Int).Mul(s.TotalAmount, big.NewInt(100)), total)
-			info += fmt.Sprintf(doc.T("my_shares")+": %%%f.2\n", myshare)
+			myshare10 := new(big.Int).Div(new(big.Int).Mul(s.TotalAmount, big.NewInt(10000)), s.TotalFromAll)
+			myshare := float64(myshare10.Int64()) / 100.0
+			info += fmt.Sprintf(doc.T("my_share")+": %.2f%%\n", myshare)
 
 			info += user.Address[0:6] + "..." + user.Address[len(user.Address)-4:]
 			t.AddRow(info, doc.FormatValue(s.TotalAmount, 18), doc.FormatFiat(fiat))

@@ -30,9 +30,9 @@ func (doc *Doc) NewSection(title string) {
 
 	// Draw a line under the title
 	doc.SetLineWidth(1)
-	doc.Line(doc.margin_left, doc.GetY(), doc.pageWidth-doc.margin_right, doc.GetY())
+	doc.Line(doc.margins.Left, doc.GetY(), doc.pageWidth-doc.margins.Right, doc.GetY())
 
 	doc.SetY(doc.GetY() + 60)
-	doc.SetX(doc.margin_left)
+	doc.SetX(doc.margins.Left)
 
 }

@@ -34,10 +34,7 @@ type Doc struct { // Extended gopdf.GoPdf
 	Locale                string
 	CurentPage            int
 	UserAddress           string
-	margin_left           float64
-	margin_right          float64
-	margin_top            float64
-	margin_bottom         float64
+	margins               PaddingDescription
 	pageWidth, pageHeight float64
 	indent                int
 	indentWidth           float64
@@ -125,8 +122,8 @@ func (doc *Doc) restoreStyle() {
 }
 
 func (doc *Doc) GetMarginWidth() float64 {
-	return doc.pageWidth - doc.margin_left - doc.margin_right
+	return doc.pageWidth - doc.margins.Left - doc.margins.Right
 }
 func (doc *Doc) GetMarginHeight() float64 {
-	return doc.pageHeight - doc.margin_top - doc.margin_bottom
+	return doc.pageHeight - doc.margins.Top - doc.margins.Bottom
 }

@@ -56,6 +56,8 @@ var lang_en = Language{
 		"section_my_authors":            "My Authors",
 		"my_authors_introduction":       "These are the SAVVA users you support. The weekly payment amounts reflect the values at the time this report was generated. Your total weekly support is %s.",
 		"account":                       "Account",
+		"total":                         "Total",
+		"my_share":                      "My Share",
 	},
 }
 
