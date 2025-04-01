@@ -61,7 +61,10 @@ func NewDoc(user_addr, locale string) (*Doc, error) {
 		},
 		indentWidth: 20,
 	}
+
 	doc.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
+
+	doc.SetMargins(0, 0, 0, 0) // No margins
 
 	doc.pageWidth, doc.pageHeight = gopdf.PageSizeA4.W, gopdf.PageSizeA4.H
 
@@ -93,7 +96,7 @@ func (doc *Doc) setFont(fontName string, size float64) {
 		log.Error().Err(err).Msgf("Failed to set font %s", fontName)
 	}
 	doc.style.FontName = fontName
-	doc.style.FontSize = float64(size)
+	doc.style.FontSize = size
 }
 
 func (doc *Doc) SetColor(c *Color) {

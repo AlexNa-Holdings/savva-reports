@@ -56,6 +56,7 @@ func addSectionMyAuthors(doc *pdf.Doc, from, to time.Time) {
 
 	t.ColStyle[0].MinHeight = AVATAR_SIZE
 	t.ColStyle[0].Padding.Left = AVATAR_SIZE + 10
+	t.ColStyle[0].FontSize = 12
 	t.ColStyle[1].Align = 'R'
 	t.ColStyle[2].Align = 'R'
 
@@ -71,16 +72,14 @@ func addSectionMyAuthors(doc *pdf.Doc, from, to time.Time) {
 		}
 	}
 
-	var fiat float64
-
 	for _, s := range doc.Sponsored {
-		fiat = pdf.Value2Float(s.TotalAmount, 18) * cmn.C.SavvaTokenPrice
+		info := ""
 		user, err := data.GetUser(s.Author)
 		if err == nil {
 
-			info := "!MD"
+			info += "!MD"
 			if user.Name != "" {
-				info += "*" + strings.ToUpper(user.Name) + "\u00AE*\n"
+				info += "## " + strings.ToUpper(user.Name) + "\u00AE\n"
 			}
 
 			dn := user.GetDisplayName()
@@ -88,14 +87,20 @@ func addSectionMyAuthors(doc *pdf.Doc, from, to time.Time) {
 				info += dn + "\n"
 			}
 
-			info += doc.T("total") + ": \n" + doc.FormatValue(s.TotalAmount, 18) + " SAVVA\n" + doc.FormatFiat(fiat) + "\n"
-			myshare10 := new(big.Int).Div(new(big.Int).Mul(s.TotalAmount, big.NewInt(10000)), s.TotalFromAll)
-			myshare := float64(myshare10.Int64()) / 100.0
-			info += fmt.Sprintf(doc.T("my_share")+": %.2f%%\n", myshare)
+			fiat_total_from_all := pdf.Value2Float(s.TotalFromAll, 18) * cmn.C.SavvaTokenPrice
+			info += doc.T("total") + ": " + doc.FormatValue(s.TotalFromAll, 18) + " " + doc.FormatFiat(fiat_total_from_all) + "\n"
 
+			if s.TotalFromAll != nil && s.TotalFromAll.Cmp(big.NewInt(0)) != 0 { // just to be sure
+				myshare10 := new(big.Int).Div(new(big.Int).Mul(s.TotalAmount, big.NewInt(10000)), s.TotalFromAll)
+				myshare := float64(myshare10.Int64()) / 100.0
+				info += fmt.Sprintf(doc.T("my_share")+": %.2f%%\n", myshare)
+			}
 			info += user.Address[0:6] + "..." + user.Address[len(user.Address)-4:]
-			t.AddRow(info, doc.FormatValue(s.TotalAmount, 18), doc.FormatFiat(fiat))
 		}
+
+		fiat := pdf.Value2Float(s.TotalAmount, 18) * cmn.C.SavvaTokenPrice
+		t.AddRow(info, doc.FormatValue(s.TotalAmount, 18), doc.FormatFiat(fiat))
+
 	}
 
 	doc.WriteTable(t)

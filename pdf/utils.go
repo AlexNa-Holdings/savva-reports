@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/AlexNa-Holdings/savva-reports/cmn"
-	"github.com/rs/zerolog/log"
 )
 
 func (doc *Doc) TextCentered(text string, x, y float64) {
@@ -104,13 +103,6 @@ func (doc *Doc) Footer() {
 func (doc *Doc) NewLine() {
 	doc.SetY(doc.GetY() + doc.style.FontSize*1.3)
 	doc.SetX(doc.margins.Left + float64(doc.indent)*doc.indentWidth)
-
-	// Check page boundary
-	if doc.GetY() > doc.pageHeight-doc.margins.Bottom {
-		doc.NextPage()
-	}
-
-	log.Debug().Msgf("NewLine: cx=%f, cy=%f", doc.GetX(), doc.GetY())
 }
 
 func (doc *Doc) NewNLines(n int) {

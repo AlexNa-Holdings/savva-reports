@@ -35,20 +35,20 @@ func (doc *Doc) MarkDownToPdfEx(md string, x, y, w, h float64, auto_page bool) e
 	text_height, _ := doc.MeasureCellHeightByText("A")
 	doc.SetXY(x, y+text_height)
 
-	doc.renderNode(node, x, y, w, h, auto_page)
+	doc.renderNode(node, x, y, w, h, auto_page, doc.style.FontSize)
 	doc.NewLine()
 
 	return nil
 }
 
-func (doc *Doc) renderNode(n *html.Node, x, y, w, h float64, auto_page bool) {
+func (doc *Doc) renderNode(n *html.Node, x, y, w, h float64, auto_page bool, fontSize float64) {
 	if n == nil {
 		return
 	}
 
 	switch n.Type {
 	case html.ElementNode:
-		doc.handleElementStart(n, x)
+		doc.handleElementStart(n, x, fontSize)
 	case html.TextNode:
 		if n.Data != "" {
 			x, y, w, h = doc.writeText(n.Data, x, y, w, h, auto_page)
@@ -56,7 +56,7 @@ func (doc *Doc) renderNode(n *html.Node, x, y, w, h float64, auto_page bool) {
 	}
 
 	for child := n.FirstChild; child != nil; child = child.NextSibling {
-		doc.renderNode(child, x, y, w, h, auto_page)
+		doc.renderNode(child, x, y, w, h, auto_page, fontSize)
 	}
 
 	if n.Type == html.ElementNode {
@@ -105,7 +105,7 @@ func (doc *Doc) writeText(text string, x, y, w, h float64, auto_page bool) (floa
 	return x, y, w, h
 }
 
-func (doc *Doc) handleElementStart(n *html.Node, x float64) {
+func (doc *Doc) handleElementStart(n *html.Node, x, fontSize float64) {
 
 	log.Debug().Msgf("< %s", n.Data)
 
@@ -113,19 +113,19 @@ func (doc *Doc) handleElementStart(n *html.Node, x float64) {
 
 	switch n.Data {
 	case "h1":
-		doc.setFont("Times", 24)
-		doc.NewLine()
-		doc.SetX(x)
+		doc.setFont("TimesBold", fontSize*1.5)
+		if doc.GetX() > x {
+			doc.NewLine()
+			doc.SetX(x)
+		}
 	case "h2":
-		doc.setFont("Times", 20)
-		doc.NewLine()
-		doc.SetX(x)
-	case "h3":
-		doc.setFont("Times", 18)
-		doc.NewLine()
-		doc.SetX(x)
+		doc.setFont("TimesBold", fontSize*1.2)
+		if doc.GetX() > x {
+			doc.NewLine()
+			doc.SetX(x)
+		}
 	case "p":
-		doc.setFont("Times", 14)
+		doc.setFont("Times", fontSize)
 		if !doc.skip_newline {
 			doc.NewLine()
 			doc.SetX(x)
@@ -133,10 +133,10 @@ func (doc *Doc) handleElementStart(n *html.Node, x float64) {
 		}
 
 	case "strong":
-		doc.setFont("TimesBold", 14)
+		doc.setFont("TimesBold", fontSize)
 		doc.SetColor(&SAVVA_DARK_COLOR)
 	case "em":
-		doc.setFont("TimesBold", 14)
+		doc.setFont("TimesBold", fontSize)
 	case "ul", "ol":
 		doc.indent++
 	case "li":
