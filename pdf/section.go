@@ -33,5 +33,6 @@ func (doc *Doc) NewSection(title string) {
 	doc.Line(doc.margin_left, doc.GetY(), doc.pageWidth-doc.margin_right, doc.GetY())
 
 	doc.SetY(doc.GetY() + 60)
+	doc.SetX(doc.margin_left)
 
 }

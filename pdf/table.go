@@ -1,15 +1,18 @@
 package pdf
 
 import (
+	"strings"
+
 	"github.com/rs/zerolog/log"
 )
 
 type Table struct {
-	Cells     [][]string
-	Header    []string
-	W, H      int
-	ColWidths []float64
-	ColStyle  []Style
+	Cells            [][]string
+	Header           []string
+	W, H             int
+	ColWidths        []float64
+	ColStyle         []Style
+	OnBeforeDrawCell func(t *Table, row, col int, x, y float64, w float64, h float64, text string, style *Style)
 }
 
 var HeaderStyle = &Style{
@@ -18,14 +21,14 @@ var HeaderStyle = &Style{
 	FontColor: &Color{0xf7, 0xf7, 0xf7},
 	BGColor:   &SAVVA_DARK_COLOR,
 	Align:     'C',
-	Padding:   Padding{left: 5, top: 4, right: 5, bottom: 6},
+	Padding:   PaddingDescription{Left: 5, Top: 4, Right: 5, Bottom: 6},
 }
 
 var DefaultStyle = &Style{
 	FontName:  "Arial",
 	FontSize:  12,
 	FontColor: &Color{0, 0, 0},
-	Padding:   Padding{left: 5, top: 4, right: 0, bottom: 6},
+	Padding:   PaddingDescription{Left: 5, Top: 4, Right: 0, Bottom: 6},
 	Align:     'L',
 }
 
@@ -109,7 +112,6 @@ func (doc *Doc) WriteTable(t *Table) {
 
 	table_y := doc.GetY()
 	y := table_y
-	last_row_y := y
 
 	header_height := doc.estimateHeaderHeight(t)
 	first_row_height := doc.estimateRowHeight(t, 0)
@@ -125,19 +127,25 @@ func (doc *Doc) WriteTable(t *Table) {
 			doc.SetFillColor(HeaderStyle.BGColor.R, HeaderStyle.BGColor.G, HeaderStyle.BGColor.B)
 			doc.SetStrokeColor(HeaderStyle.BGColor.R, HeaderStyle.BGColor.G, HeaderStyle.BGColor.B)
 			doc.SetLineWidth(0.5)
-			doc.Rectangle(table_x, y-header_height, table_x+total_width, y, "DF", 0, 0)
+			doc.Rectangle(table_x, y, table_x+total_width, y+header_height, "DF", 0, 0)
 		}
 
 		x := table_x
-		for i, text := range t.Header {
-			doc.writeTextInWidth(text, x, y, t.ColWidths[i], HeaderStyle)
-			x += t.ColWidths[i]
+		for j, text := range t.Header {
+			doc.writeTextInWidth(text, x, y, t.ColWidths[j], HeaderStyle)
+			x += t.ColWidths[j]
 		}
+
 		y += header_height
 	}
 
 	for i, row := range t.Cells {
+
+		// doc.SetStrokeColor(255, 0, 0) //DEBUG
+		// doc.Line(table_x, y, table_x+float64(10*i), y)
+
 		row_height := doc.estimateRowHeight(t, i)
+
 		if y+row_height > doc.pageHeight-doc.margin_bottom {
 			// may be add later ..continue to next page
 
@@ -147,39 +155,63 @@ func (doc *Doc) WriteTable(t *Table) {
 			// vertical lines
 			var v_x = table_x
 			for i := 0; i < t.W; i++ {
-				doc.Line(v_x, table_y, v_x, last_row_y)
+				doc.Line(v_x, table_y, v_x, y)
 				v_x += t.ColWidths[i]
 			}
-			doc.Line(v_x, table_y, v_x, last_row_y)                        // right
-			doc.Line(table_x, last_row_y, table_x+total_width, last_row_y) // bottom
+			doc.Line(v_x, table_y, v_x, y)               // right
+			doc.Line(table_x, y, table_x+total_width, y) // bottom
 
+			table_x -= doc.margin_left
 			doc.NextPage()
+			table_x += doc.margin_left
 			table_y = doc.GetY()
+
 			y = table_y
 			if header_height > 0 { // Write header
 				if HeaderStyle.BGColor != nil {
 					doc.SetFillColor(HeaderStyle.BGColor.R, HeaderStyle.BGColor.G, HeaderStyle.BGColor.B)
 					doc.SetStrokeColor(HeaderStyle.BGColor.R, HeaderStyle.BGColor.G, HeaderStyle.BGColor.B)
 					doc.SetLineWidth(0.5)
-					doc.Rectangle(table_x, y-header_height, table_x+total_width, y, "DF", 0, 0)
+					doc.Rectangle(table_x, y, table_x+total_width, y+header_height, "DF", 0, 0)
 				}
 
 				x := table_x
-				for i, text := range t.Header {
-					doc.writeTextInWidth(text, x, y, t.ColWidths[i], HeaderStyle)
-					x += t.ColWidths[i]
+				for j, text := range t.Header {
+					doc.writeTextInWidth(text, x, y, t.ColWidths[j], HeaderStyle)
+					x += t.ColWidths[j]
 				}
 				y += header_height
 			}
 		}
 
+		if i&1 == 1 {
+			// make grey background for even rows
+			doc.SetFillColor(0xf5, 0xf5, 0xf5)
+			doc.SetStrokeColor(0xf5, 0xf5, 0xf5)
+			doc.SetLineWidth(0.5)
+			doc.Rectangle(table_x, y, table_x+total_width, y+row_height, "DF", 0, 0)
+		}
+
 		x := table_x
 		for j, text := range row {
-			doc.writeTextInWidth(text, x, y, t.ColWidths[j], &t.ColStyle[j])
+
+			if t.OnBeforeDrawCell != nil {
+				t.OnBeforeDrawCell(t, i, j, x, y, t.ColWidths[j], row_height, text, &t.ColStyle[j])
+			}
+
+			if strings.HasPrefix(text, "!MD") {
+				doc.MarkDownToPdfEx(
+					strings.TrimPrefix(text, "!MD"), x+t.ColStyle[j].Padding.Left,
+					y+t.ColStyle[j].Padding.Top,
+					t.ColWidths[j]-t.ColStyle[j].Padding.Left-t.ColStyle[j].Padding.Right,
+					row_height-t.ColStyle[j].Padding.Top-t.ColStyle[j].Padding.Bottom,
+					false)
+			} else {
+				doc.writeTextInWidth(text, x, y, t.ColWidths[j], &t.ColStyle[j])
+			}
 			x += t.ColWidths[j]
 		}
 
-		last_row_y = y
 		y += row_height
 	}
 
@@ -189,11 +221,11 @@ func (doc *Doc) WriteTable(t *Table) {
 	// vertical lines
 	var v_x = table_x
 	for i := 0; i < t.W; i++ {
-		doc.Line(v_x, table_y, v_x, last_row_y)
+		doc.Line(v_x, table_y, v_x, y)
 		v_x += t.ColWidths[i]
 	}
-	doc.Line(v_x, table_y, v_x, last_row_y)                        // right
-	doc.Line(table_x, last_row_y, table_x+total_width, last_row_y) // bottom
+	doc.Line(v_x, table_y, v_x, y)               // right
+	doc.Line(table_x, y, table_x+total_width, y) // bottom
 
 }
 
@@ -216,6 +248,7 @@ func (doc *Doc) estimateRowHeight(t *Table, row int) float64 {
 
 	row_height := 0.
 	for i, text := range t.Cells[row] {
+		row_height = max(row_height, t.ColStyle[i].MinHeight+t.ColStyle[i].Padding.Top+t.ColStyle[i].Padding.Bottom)
 		row_height = max(row_height, doc.estimateTextHeight(text, t.ColWidths[i], &t.ColStyle[i]))
 	}
 

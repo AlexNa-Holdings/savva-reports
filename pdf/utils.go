@@ -40,13 +40,13 @@ func (doc *Doc) TextWidthStyle(text string, x, y, w float64, style *Style) {
 
 	switch style.Align {
 	case 'L':
-		doc.TextLeft(text, x+style.Padding.left, y)
+		doc.TextLeft(text, x+style.Padding.Left, y)
 	case 'C':
-		doc.TextCentered(text, x+style.Padding.left+w/2, y)
+		doc.TextCentered(text, x+style.Padding.Left+w/2, y)
 	case 'R':
-		doc.TextRight(text, x+w-style.Padding.right, y)
+		doc.TextRight(text, x+w-style.Padding.Right, y)
 	default:
-		doc.TextLeft(text, x+style.Padding.left, y)
+		doc.TextLeft(text, x+style.Padding.Left, y)
 	}
 }
 
@@ -125,7 +125,7 @@ func (doc *Doc) estimateTextHeight(text string, width float64, style *Style) flo
 	doc.saveStyle()
 	defer doc.restoreStyle()
 
-	width = width - style.Padding.left - style.Padding.right
+	width = width - style.Padding.Left - style.Padding.Right
 
 	// Apply temporary style for measurement
 	doc.setFont(style.FontName, style.FontSize)
@@ -155,21 +155,28 @@ func (doc *Doc) estimateTextHeight(text string, width float64, style *Style) flo
 		}
 	}
 
-	return lineHeight*float64(lines) + style.Padding.top + style.Padding.bottom
+	return lineHeight*float64(lines) + style.Padding.Top + style.Padding.Bottom
 }
 
 // writeTextInWidth writes text at the x, y within the specified width, using provided style.
 func (doc *Doc) writeTextInWidth(text string, x, y, width float64, style *Style) {
+
+	if style == nil {
+		style = &doc.style
+	}
+
 	// Save original style to restore later.
 	doc.saveStyle()
 	defer doc.restoreStyle()
 
-	width -= style.Padding.left + style.Padding.right
-	y -= style.Padding.bottom
+	width -= style.Padding.Left + style.Padding.Right
 
 	// Set desired style for text
 	doc.setFont(style.FontName, style.FontSize)
 	doc.SetTextColor(style.FontColor.R, style.FontColor.G, style.FontColor.B)
+
+	text_height, _ := doc.MeasureCellHeightByText("A")
+	y += text_height + style.Padding.Top
 
 	lineHeight := style.FontSize * 1.2
 	spaceWidth, _ := doc.MeasureTextWidth(" ")
@@ -195,13 +202,13 @@ func (doc *Doc) writeTextInWidth(text string, x, y, width float64, style *Style)
 		if lineWidth+additionalWidth > float64(width) {
 			switch style.Align {
 			case 'L':
-				doc.TextLeft(line, x+style.Padding.left, y)
+				doc.TextLeft(line, x+style.Padding.Left, y)
 			case 'C':
-				doc.TextCentered(line, x+style.Padding.left+width/2, y)
+				doc.TextCentered(line, x+style.Padding.Left+width/2, y)
 			case 'R':
-				doc.TextRight(line, x+width-style.Padding.right, y)
+				doc.TextRight(line, x+width-style.Padding.Right, y)
 			default:
-				doc.TextLeft(line, x+style.Padding.left, y)
+				doc.TextLeft(line, x+style.Padding.Left, y)
 			}
 
 			line = word
@@ -227,80 +234,17 @@ func (doc *Doc) writeTextInWidth(text string, x, y, width float64, style *Style)
 	if line != "" {
 		switch style.Align {
 		case 'L':
-			doc.TextLeft(line, x+style.Padding.left, y)
+			doc.TextLeft(line, x+style.Padding.Left, y)
 		case 'C':
-			doc.TextCentered(line, x+style.Padding.left+width/2, y)
+			doc.TextCentered(line, x+style.Padding.Left+width/2, y)
 		case 'R':
-			doc.TextRight(line, x+width-style.Padding.right, y)
+			doc.TextRight(line, x+width-style.Padding.Right, y)
 		default:
-			doc.TextLeft(line, x+style.Padding.left, y)
+			doc.TextLeft(line, x+style.Padding.Left, y)
 		}
 	}
 }
 
-func (doc *Doc) writeText(text string) {
-	words := strings.Fields(text)
-
-	// add leading space
-	if len(text) > 0 && text[0] == ' ' {
-		words = append([]string{" "}, words...)
-	}
-
-	// add trailing space
-	if text[len(text)-1] == ' ' {
-		words = append(words, " ")
-	}
-
-	for len(words) > 0 {
-		maxWidth := doc.pageWidth - doc.margin_right - doc.GetX()
-		line, line_width, remainingWords := doc.wrapText(words, maxWidth)
-		words = remainingWords
-
-		// Check for page break
-		if doc.GetY() > doc.pageHeight-doc.margin_bottom {
-			doc.NextPage()
-		}
-
-		doc.SetXY(doc.GetX(), doc.GetY())
-		doc.Text(line)
-		if len(remainingWords) > 0 {
-			doc.NewLine()
-		} else {
-			doc.SetX(doc.GetX() + line_width)
-		}
-	}
-
-}
-
-func (doc *Doc) wrapText(words []string, maxWidth float64) (string, float64, []string) {
-	var line string
-	var lineWidth float64
-	spaceWidth, _ := doc.MeasureTextWidth(" ")
-
-	for i, word := range words {
-		wordWidth, _ := doc.MeasureTextWidth(word)
-
-		// Include space before word if not first word in the line
-		additionalWidth := wordWidth
-		if i > 0 {
-			additionalWidth += spaceWidth
-		}
-
-		if lineWidth+additionalWidth > maxWidth {
-			return line, lineWidth, words[i:]
-		}
-
-		if line == "" {
-			line = word
-		} else {
-			line += " " + word
-		}
-
-		lineWidth += additionalWidth
-	}
-
-	return line, lineWidth, nil
-}
 func Value2Float(v *big.Int, decimals int) float64 {
 	if v == nil || v.Cmp(big.NewInt(0)) == 0 {
 		return 0

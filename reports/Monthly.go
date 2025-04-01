@@ -37,6 +37,8 @@ func Build(user_addr string, year, month int, output_path string, locale string)
 
 	time_from := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
 	time_to := time.Date(year, time.Month(month+1), 1, 0, 0, 0, 0, time.UTC)
+
+	addSectionMyAuthors(doc, time_from, time_to)
 	addSectionSummary(doc, time_from, time_to)
 
 	err = doc.WritePdf(output_path)

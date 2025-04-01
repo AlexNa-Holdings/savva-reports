@@ -8,8 +8,8 @@ import (
 	"github.com/signintech/gopdf"
 )
 
-type Padding struct {
-	left, top, right, bottom float64
+type PaddingDescription struct {
+	Left, Top, Right, Bottom float64
 }
 
 type Style struct {
@@ -17,8 +17,9 @@ type Style struct {
 	FontSize  float64
 	FontColor *Color
 	BGColor   *Color
-	Padding   Padding
+	Padding   PaddingDescription
 	Align     uint8 // 'L', 'C', 'R'
+	MinHeight float64
 }
 
 type Color struct {
@@ -45,7 +46,8 @@ type Doc struct { // Extended gopdf.GoPdf
 	styles                []Style
 
 	// data
-	History []data.HistoryRecord
+	History   []data.HistoryRecord
+	Sponsored []data.Sponsored
 }
 
 func NewDoc(user_addr, locale string) (*Doc, error) {

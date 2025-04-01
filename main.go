@@ -48,7 +48,7 @@ func main() {
 
 	defer cmn.C.DB.Close()
 
-	// err = reports.Build("0xDf691828859e3Cb1e31E6D2F8A9b04F3B91A717f", 2025, 2, "Month.pdf", "ru")
+	//err = reports.Build("0xDf691828859e3Cb1e31E6D2F8A9b04F3B91A717f", 2025, 2, "Month.pdf", "ru")
 	err = reports.Build("0x86002b3616cD8F8DC4C3cAC51571d833810B2718", 2025, 2, "Month.pdf", "en")
 
 	if err != nil {

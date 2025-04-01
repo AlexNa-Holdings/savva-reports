@@ -113,3 +113,21 @@ func GetUser(address string) (*User, error) {
 
 	return &user, nil
 }
+
+func (u *User) GetDisplayName() string {
+
+	p, ok := u.Profiles["savva.app"]
+	if ok {
+		if p.DisplayName != "" {
+			return p.DisplayName
+		}
+	}
+
+	for _, p := range u.Profiles {
+		if p.DisplayName != "" {
+			return p.DisplayName
+		}
+	}
+
+	return ""
+}
