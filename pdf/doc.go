@@ -34,7 +34,7 @@ var SAVVA_DARK_COLOR Color = Color{0xc4, 0x80, 0x00}
 type Section struct {
 	Title       string
 	Page        int
-	SubSections []Section
+	SubSections []*Section
 }
 
 type Doc struct { // Extended gopdf.GoPdf
@@ -42,11 +42,12 @@ type Doc struct { // Extended gopdf.GoPdf
 	Locale      string
 	CurentPage  int
 	UserAddress string
-	Sections    []Section
+	Sections    []*Section
 
 	Margins                            PaddingDescription
 	PageWidth, PageHeight              float64
 	Section, SubSection, SubSubSection int
+	PrintHeader                        bool
 
 	// data
 	History   []data.HistoryRecord
@@ -76,6 +77,7 @@ func NewDoc(user_addr, locale string) (*Doc, error) {
 		indentWidth: 20,
 		Section:     -1,
 		SubSection:  -1,
+		PrintHeader: true,
 	}
 
 	doc.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
@@ -107,7 +109,7 @@ func (doc *Doc) T(key string) string {
 	return i18n.T(key, doc.Locale)
 }
 
-func (doc *Doc) setFont(fontName string, size float64) {
+func (doc *Doc) SetDocFont(fontName string, size float64) {
 	if err := doc.SetFont(fontName, "", size); err != nil {
 		log.Error().Err(err).Msgf("Failed to set font %s", fontName)
 	}
@@ -132,7 +134,7 @@ func (doc *Doc) restoreStyle() {
 	doc.style = doc.styles[len(doc.styles)-1]
 	doc.styles = doc.styles[:len(doc.styles)-1]
 
-	doc.setFont(doc.style.FontName, doc.style.FontSize)
+	doc.SetDocFont(doc.style.FontName, doc.style.FontSize)
 	doc.SetTextColor(
 		doc.style.FontColor.R,
 		doc.style.FontColor.G,

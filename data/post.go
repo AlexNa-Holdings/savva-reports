@@ -100,7 +100,7 @@ func GetPostsByAuthor(address, sponsor string, from, to time.Time) ([]Post, erro
 			continue
 		}
 
-		err = LoadThumbnail(&p)
+		err = p.LoadThumbnail()
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed to load thumbnail for post %s", p.SavvaCid)
 			continue
@@ -115,7 +115,7 @@ func GetPostsByAuthor(address, sponsor string, from, to time.Time) ([]Post, erro
 }
 
 func LoadPostInfo(post *Post) error {
-	fileContent := cmn.Ipfs(post.Ipfs + "/info.yaml")
+	fileContent := cmn.C.IPFS(post.Ipfs + "/info.yaml")
 	if fileContent == nil {
 		return fmt.Errorf("failed to load post %s", post.SavvaCid)
 	}
@@ -154,28 +154,34 @@ func LoadPostInfo(post *Post) error {
 	}
 }
 
-func LoadThumbnail(post *Post) error {
-	if post.c_v2_0.Thumbnail == "" {
-		user, err := GetUser(post.AuthorAddr)
+func (p *Post) LoadThumbnail() error {
+	if p.c_v2_0.Thumbnail == "" {
+		user, err := GetUser(p.AuthorAddr)
 		if err != nil {
-			log.Error().Msgf("Failed to load user %s", post.AuthorAddr)
-			return fmt.Errorf("failed to load user %s", post.AuthorAddr)
+			log.Error().Msgf("Failed to load user %s", p.AuthorAddr)
+			return fmt.Errorf("failed to load user %s", p.AuthorAddr)
 		}
-		post.ThumbnailImg = user.AvatarImg
+		p.ThumbnailImg = user.AvatarImg
 		return nil
 	}
 
-	thumbnail := cmn.Ipfs(post.c_v2_0.Thumbnail)
+	dp := strings.TrimSpace(p.c_v2_0.Thumbnail)
+
+	if !strings.HasPrefix(dp, "/") {
+		dp = "/" + dp
+	}
+
+	thumbnail := cmn.C.IPFS(p.Ipfs + dp)
 	if thumbnail == nil {
-		log.Error().Msgf("Failed to load thumbnail for post %s", post.SavvaCid)
-		return fmt.Errorf("failed to load thumbnail for post %s", post.SavvaCid)
+		log.Error().Msgf("Failed to load thumbnail for post %s", p.SavvaCid)
+		return fmt.Errorf("failed to load thumbnail for post %s", p.SavvaCid)
 	}
 
 	var err error
-	post.ThumbnailImg, _, err = image.Decode(bytes.NewReader(thumbnail))
+	p.ThumbnailImg, _, err = image.Decode(bytes.NewReader(thumbnail))
 	if err != nil {
-		log.Error().Msgf("Failed to decode thumbnail for post %s", post.SavvaCid)
-		return fmt.Errorf("failed to decode thumbnail for post %s", post.SavvaCid)
+		log.Error().Msgf("Failed to decode thumbnail for post %s", p.SavvaCid)
+		return fmt.Errorf("failed to decode thumbnail for post %s", p.SavvaCid)
 	}
 
 	return nil
@@ -227,7 +233,7 @@ func (p *Post) GetContent(locale string) (string, error) {
 					dp = "/" + dp
 				}
 
-				content := cmn.Ipfs(p.Ipfs + dp)
+				content := cmn.C.IPFS(p.Ipfs + dp)
 				if content == nil {
 					return "", fmt.Errorf("failed to load content for post %s", p.SavvaCid)
 				}
@@ -249,7 +255,7 @@ func (p *Post) GetImage(url string) (image.Image, error) {
 					url = "/" + url
 				}
 
-				content := cmn.Ipfs(p.Ipfs + url)
+				content := cmn.C.IPFS(p.Ipfs + url)
 				if content == nil {
 					return nil, fmt.Errorf("failed to load content for post %s", p.SavvaCid)
 				}

@@ -39,7 +39,9 @@ func (doc *Doc) TextRight(text string, x, y float64) {
 }
 
 func (doc *Doc) TextWidthStyle(text string, x, y, w float64, style *Style) {
-	doc.setFont(style.FontName, style.FontSize)
+	if style.FontName != "" && style.FontSize != 0 {
+		doc.SetDocFont(style.FontName, style.FontSize)
+	}
 
 	switch style.Align {
 	case 'L':
@@ -74,7 +76,9 @@ func (doc *Doc) NextPage() {
 		doc.Margins.Right = 40
 	}
 
-	doc.Header()
+	if doc.PrintHeader {
+		doc.Header()
+	}
 	doc.Footer()
 
 	doc.SetX(doc.Margins.Left)
@@ -124,7 +128,7 @@ func (doc *Doc) estimateTextHeight(text string, width float64, style *Style) flo
 	width = width - style.Padding.Left - style.Padding.Right
 
 	// Apply temporary style for measurement
-	doc.setFont(style.FontName, style.FontSize)
+	doc.SetDocFont(style.FontName, style.FontSize)
 
 	// Calculate line height (standard is ~1.2x font size)
 	lineHeight := style.FontSize * 1.2
@@ -168,7 +172,7 @@ func (doc *Doc) writeTextInWidth(text string, x, y, width float64, style *Style)
 	width -= style.Padding.Left + style.Padding.Right
 
 	// Set desired style for text
-	doc.setFont(style.FontName, style.FontSize)
+	doc.SetDocFont(style.FontName, style.FontSize)
 	doc.SetTextColor(style.FontColor.R, style.FontColor.G, style.FontColor.B)
 
 	text_height, _ := doc.MeasureCellHeightByText("A")
@@ -338,8 +342,8 @@ func (doc *Doc) FormatValue(amount *big.Int, decimals int) string {
 
 	if doc.Locale == "ru" {
 		//replace . -> ' ', . -> ,
-		str = strings.ReplaceAll(str, ".", " ")
-		str = strings.ReplaceAll(str, ",", ".")
+		str = strings.ReplaceAll(str, ",", " ")
+		str = strings.ReplaceAll(str, ".", ",")
 	}
 
 	return str
@@ -361,8 +365,8 @@ func (doc *Doc) FormatFiat(value float64) string {
 
 	if doc.Locale == "ru" {
 		//replace . -> ' ', . -> ,
-		str = strings.ReplaceAll(str, ".", " ")
-		str = strings.ReplaceAll(str, ",", ".")
+		str = strings.ReplaceAll(str, ",", " ")
+		str = strings.ReplaceAll(str, ".", ",")
 	}
 
 	return cmn.C.CurrencySymbol + str
@@ -480,4 +484,31 @@ func EnsureRGBA(src image.Image) *image.RGBA {
 		}
 	}
 	return dst
+}
+
+func (doc *Doc) EclipseToWidth(s string, width float64) (string, float64) {
+	// Check if the string fits within the given width
+	textWidth, _ := doc.MeasureTextWidth(s)
+	if textWidth <= width {
+		return s, textWidth
+	}
+
+	// If it doesn't fit, truncate and add ellipsis
+	ellipsis := "..."
+	truncated := s
+
+	for len(truncated) > 0 {
+		truncated = truncated[:len(truncated)-1]
+		textWidth, _ = doc.MeasureTextWidth(truncated + ellipsis)
+		if textWidth <= width {
+			break
+		}
+	}
+
+	return truncated + ellipsis, textWidth
+}
+
+func (doc *Doc) EclipseToWidthWithStyle(s string, width float64, style *Style) (string, float64) {
+	doc.SetDocFont(style.FontName, style.FontSize)
+	return doc.EclipseToWidth(s, width)
 }

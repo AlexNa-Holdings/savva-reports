@@ -119,19 +119,19 @@ func (doc *Doc) handleElementStart(n *html.Node, x, fontSize float64) {
 
 	switch n.Data {
 	case "h1":
-		doc.setFont("TimesBold", fontSize*1.5)
+		doc.SetDocFont("TimesBold", fontSize*1.5)
 		if doc.GetX() > x {
 			doc.NewLine()
 			doc.SetX(x)
 		}
 	case "h2":
-		doc.setFont("TimesBold", fontSize*1.2)
+		doc.SetDocFont("TimesBold", fontSize*1.2)
 		if doc.GetX() > x {
 			doc.NewLine()
 			doc.SetX(x)
 		}
 	case "p":
-		doc.setFont("Times", fontSize)
+		doc.SetDocFont("Times", fontSize)
 		if !doc.skip_newline {
 			doc.NewLine()
 			doc.SetX(x)
@@ -139,10 +139,10 @@ func (doc *Doc) handleElementStart(n *html.Node, x, fontSize float64) {
 		}
 
 	case "strong":
-		doc.setFont("TimesBold", fontSize)
+		doc.SetDocFont("TimesBold", fontSize)
 		doc.SetColor(&SAVVA_DARK_COLOR)
 	case "em":
-		doc.setFont("TimesBold", fontSize)
+		doc.SetDocFont("TimesBold", fontSize)
 	case "ul", "ol":
 		doc.indent++
 	case "li":
@@ -171,7 +171,7 @@ func (doc *Doc) handleElementStart(n *html.Node, x, fontSize float64) {
 			}
 		}
 	case "a":
-		doc.setFont("Times", 12.0)
+		doc.SetDocFont("Times", 12.0)
 	}
 }
 
@@ -180,7 +180,7 @@ func (doc *Doc) handleElementEnd(n *html.Node, x float64) {
 
 	switch n.Data {
 	case "strong", "em":
-		doc.setFont("Times", 12)
+		doc.SetDocFont("Times", 12)
 	case "h1", "h2", "h3", "p":
 		doc.NewLine()
 		doc.SetX(x)

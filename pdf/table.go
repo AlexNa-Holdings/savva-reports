@@ -200,7 +200,7 @@ func (doc *Doc) WriteTable(t *Table) {
 			}
 
 			if strings.HasPrefix(text, "!MD") {
-				doc.setFont(t.ColStyle[j].FontName, t.ColStyle[j].FontSize)
+				doc.SetDocFont(t.ColStyle[j].FontName, t.ColStyle[j].FontSize)
 				doc.MarkDownToPdfEx(
 					strings.TrimPrefix(text, "!MD"), x+t.ColStyle[j].Padding.Left,
 					y+t.ColStyle[j].Padding.Top,

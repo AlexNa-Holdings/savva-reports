@@ -36,9 +36,9 @@ type ContractAddresses struct {
 
 type Config struct {
 	DB              *sql.DB
-	IPFS_Gateway    string
 	SavvaTokenPrice float64
 	CurrencySymbol  string
+	IPFS            func(cid string) []byte
 }
 
 var (

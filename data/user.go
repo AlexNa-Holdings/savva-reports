@@ -30,12 +30,12 @@ type User struct {
 	Profiles   map[string]UserProfile // domaion -> profile
 }
 
-var userCache = make(map[string]*User)
+var userCache = cmn.NewCache[string, *User](100)
 
 func GetUser(address string) (*User, error) {
 	// Check if the user is already cached
-	if user, found := userCache[address]; found {
-		return user, nil
+	if o, found := userCache.Get(address); found {
+		return o, nil
 	}
 
 	user := User{
@@ -67,7 +67,7 @@ func GetUser(address string) (*User, error) {
 
 	// load the avatar from IPFS
 	if user.AvatarCid != "" {
-		data := cmn.Ipfs(user.AvatarCid)
+		data := cmn.C.IPFS(user.AvatarCid)
 		if data == nil {
 			log.Printf("Error loading IPFS file for user %s: %s", address, user.AvatarCid)
 		}
@@ -97,7 +97,7 @@ func GetUser(address string) (*User, error) {
 		}
 
 		// load the profile from IPFS
-		data := cmn.Ipfs(value)
+		data := cmn.C.IPFS(value)
 		if data == nil {
 			log.Printf("Error loading IPFS file for user %s: %s", address, value)
 			return nil, err

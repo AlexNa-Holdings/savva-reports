@@ -16,7 +16,7 @@ func (doc *Doc) NewSection(title string) {
 		doc.NextPage()
 	}
 
-	doc.Sections = append(doc.Sections, Section{Title: title, Page: doc.CurentPage})
+	doc.Sections = append(doc.Sections, &Section{Title: title, Page: doc.CurentPage})
 	doc.Section = len(doc.Sections) - 1
 	doc.SubSection = 0
 	doc.SubSubSection = 0
@@ -55,7 +55,7 @@ func (doc *Doc) NewSubSection(title string) {
 		doc.NextPage()
 	}
 
-	doc.Sections[doc.Section].SubSections = append(doc.Sections[doc.Section].SubSections, Section{Title: title, Page: doc.CurentPage})
+	doc.Sections[doc.Section].SubSections = append(doc.Sections[doc.Section].SubSections, &Section{Title: title, Page: doc.CurentPage})
 	doc.SubSection = len(doc.Sections[doc.Section].SubSections) - 1
 	doc.SubSubSection = 0
 
@@ -87,7 +87,7 @@ func (doc *Doc) NewSubSubSection(title string) {
 		doc.NextPage()
 	}
 
-	doc.Sections[doc.Section].SubSections[doc.SubSection].SubSections = append(doc.Sections[doc.Section].SubSections[doc.SubSection].SubSections, Section{Title: title, Page: doc.CurentPage})
+	doc.Sections[doc.Section].SubSections[doc.SubSection].SubSections = append(doc.Sections[doc.Section].SubSections[doc.SubSection].SubSections, &Section{Title: title, Page: doc.CurentPage})
 	doc.SubSubSection = len(doc.Sections[doc.Section].SubSections[doc.SubSection].SubSections) - 1
 
 	doc.SetX(doc.Margins.Left + 20)

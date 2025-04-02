@@ -61,11 +61,12 @@ var lang_en = Language{
 		"authors.title":        "My Authors",
 		"authors.introduction": "In this section you can see some posts from authors you supported.",
 
-		"account":  "Account",
-		"total":    "Total",
-		"my_share": "My Share",
-		"posted":   "Posted",
-		"domain":   "Domain",
+		"account":           "Account",
+		"total":             "Total",
+		"my_share":          "My Share",
+		"posted":            "Posted",
+		"domain":            "Domain",
+		"table_of_contents": "Table of Contents",
 	},
 }
 

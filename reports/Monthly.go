@@ -41,6 +41,7 @@ func Build(user_addr string, year, month int, output_path string, locale string)
 	addSectionSponsored(doc, time_from, time_to)
 	addSectionAuthors(doc, time_from, time_to)
 	addSectionSummary(doc, time_from, time_to)
+	addTableOfContents(doc)
 
 	err = doc.WritePdf(output_path)
 	if err != nil {

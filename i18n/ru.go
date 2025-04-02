@@ -63,10 +63,11 @@ var lang_ru = Language{
 		"authors.title":        "Мои авторы",
 		"authors.introduction": "Это пользователи SAVVA, которых вы поддерживаете.",
 
-		"account":  "Учетная запись",
-		"total":    "Итого",
-		"my_share": "Моя доля",
-		"posted":   "Опубликовано",
-		"domain":   "Домен",
+		"account":           "Учетная запись",
+		"total":             "Итого",
+		"my_share":          "Моя доля",
+		"posted":            "Опубликовано",
+		"domain":            "Домен",
+		"table_of_contents": "Содержание",
 	},
 }
