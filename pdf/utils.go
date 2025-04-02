@@ -297,7 +297,7 @@ func FormatValue(amount *big.Int, decimals int) string {
 	intPartWithCommas := ""
 	n := len(intPart)
 	for i, ch := range intPart {
-		if i > 0 && (n-i)%3 == 0 {
+		if i > 0 && (n-i)%3 == 0 && intPart[i-1] != '-' {
 			intPartWithCommas += ","
 		}
 		intPartWithCommas += string(ch)
@@ -309,26 +309,13 @@ func FormatValue(amount *big.Int, decimals int) string {
 	return intPartWithCommas
 }
 
-func FormatFloat(value float64) string {
-	switch {
-	case value == 0:
-		return "0"
-	case value < 0.01:
-		return fmt.Sprintf("%.4f", value)
-	case value < 1:
-		return fmt.Sprintf("%.2f", value)
-	default:
-		return addCommas(fmt.Sprintf("%.0f", value))
-	}
-}
-
 // addCommas adds commas to a numeric string.
 func addCommas(number string) string {
 	var result strings.Builder
 	n := len(number)
 
 	for i, digit := range number {
-		if (n-i)%3 == 0 && i != 0 {
+		if (n-i)%3 == 0 && i != 0 && number[i-1] != '-' {
 			result.WriteRune(',')
 		}
 		result.WriteRune(digit)
@@ -349,19 +336,12 @@ func (doc *Doc) FormatValue(amount *big.Int, decimals int) string {
 	return str
 }
 
-func (doc *Doc) FormatFloat(value float64) string {
-	str := FormatFloat(value)
-
-	if doc.Locale == "ru" {
-		//replace . -> ' ', . -> ,
-		str = strings.ReplaceAll(str, ".", " ")
-		str = strings.ReplaceAll(str, ",", ".")
-	}
-	return str
-}
-
 func (doc *Doc) FormatFiat(value float64) string {
 	str := fmt.Sprintf("%.2f", value)
+
+	p := strings.Split(str, ".")
+
+	str = addCommas(p[0]) + "." + p[1]
 
 	if doc.Locale == "ru" {
 		//replace . -> ' ', . -> ,
