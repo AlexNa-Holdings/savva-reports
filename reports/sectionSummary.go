@@ -13,7 +13,7 @@ import (
 
 func addSectionSummary(doc *pdf.Doc, from, to time.Time) {
 	// Add a new section for the summary
-	doc.NewSection(doc.T("section_summary"))
+	doc.NewSection(doc.T("summary.title"))
 
 	if doc.History == nil {
 		var err error
@@ -24,7 +24,7 @@ func addSectionSummary(doc *pdf.Doc, from, to time.Time) {
 		}
 	}
 
-	f := doc.T("summary_introduction")
+	f := doc.T("summary.introduction")
 
 	doc.MarkDownToPdf(fmt.Sprintf(f, from.UTC().Format(time.RFC822), to.UTC().Format(time.RFC822)))
 	doc.NewLine()

@@ -20,7 +20,7 @@ func (doc *Doc) MarkDownToPdf(md string) error {
 
 	// doc.NewLine()
 
-	return doc.MarkDownToPdfEx(md, doc.margins.Left, doc.GetY(), doc.GetMarginWidth(), doc.GetMarginHeight()-doc.GetY(), true)
+	return doc.MarkDownToPdfEx(md, doc.Margins.Left, doc.GetY(), doc.GetMarginWidth(), doc.GetMarginHeight()-doc.GetY(), true)
 }
 
 func (doc *Doc) MarkDownToPdfEx(md string, x, y, w, h float64, auto_page bool) error {
@@ -41,9 +41,9 @@ func (doc *Doc) MarkDownToPdfEx(md string, x, y, w, h float64, auto_page bool) e
 	return nil
 }
 
-func (doc *Doc) renderNode(n *html.Node, x, y, w, h float64, auto_page bool, fontSize float64) {
+func (doc *Doc) renderNode(n *html.Node, x, y, w, h float64, auto_page bool, fontSize float64) (float64, float64, float64, float64) {
 	if n == nil {
-		return
+		return x, y, w, h
 	}
 
 	switch n.Type {
@@ -51,17 +51,22 @@ func (doc *Doc) renderNode(n *html.Node, x, y, w, h float64, auto_page bool, fon
 		doc.handleElementStart(n, x, fontSize)
 	case html.TextNode:
 		if n.Data != "" {
+
+			log.Debug().Msgf("Text: %s", n.Data)
+
 			x, y, w, h = doc.writeText(n.Data, x, y, w, h, auto_page)
 		}
 	}
 
 	for child := n.FirstChild; child != nil; child = child.NextSibling {
-		doc.renderNode(child, x, y, w, h, auto_page, fontSize)
+		x, y, w, h = doc.renderNode(child, x, y, w, h, auto_page, fontSize)
 	}
 
 	if n.Type == html.ElementNode {
 		doc.handleElementEnd(n, x)
 	}
+
+	return x, y, w, h
 }
 
 func (doc *Doc) writeText(text string, x, y, w, h float64, auto_page bool) (float64, float64, float64, float64) {
@@ -87,7 +92,7 @@ func (doc *Doc) writeText(text string, x, y, w, h float64, auto_page bool) (floa
 		if doc.GetY() > y+h {
 			if auto_page {
 				doc.NextPage()
-				x = doc.margins.Left
+				x = doc.Margins.Left
 				w = doc.GetMarginWidth()
 				h = doc.GetMarginHeight() - doc.GetY()
 				return x, y, w, h
@@ -99,6 +104,7 @@ func (doc *Doc) writeText(text string, x, y, w, h float64, auto_page bool) (floa
 		doc.Text(line)
 		if len(remainingWords) > 0 {
 			doc.NewLine()
+			doc.SetX(x)
 		}
 	}
 
@@ -147,6 +153,25 @@ func (doc *Doc) handleElementStart(n *html.Node, x, fontSize float64) {
 	case "br":
 		doc.NewLine()
 		doc.SetX(x)
+	case "img":
+
+		if strings.HasPrefix(n.Attr[0].Val, "https://www.youtube.com") ||
+			strings.HasPrefix(n.Attr[0].Val, "https://youtube.com") {
+			doc.Text("<<YouTube video>> ")
+		} else {
+
+			if doc.GetImage != nil {
+				img, err := doc.GetImage(n.Attr[0].Val)
+
+				if err != nil {
+					log.Error().Err(err).Msgf("Failed to load image %s", n.Attr[0].Val)
+				} else {
+					doc.DrawBigImage(img)
+				}
+			}
+		}
+	case "a":
+		doc.setFont("Times", 12.0)
 	}
 }
 
@@ -173,6 +198,23 @@ func (doc *Doc) wrapText(words []string, maxWidth float64) (string, float64, []s
 
 	for i, word := range words {
 		wordWidth, _ := doc.MeasureTextWidth(word)
+
+		if i == 0 && wordWidth > maxWidth {
+			// Word is too long to fit in a single line
+			// Split the word into smaller parts
+
+			wl := len(word)
+			for j := 1; j < wl; j++ {
+				w, _ := doc.MeasureTextWidth(word[0 : wl-j])
+				if w <= maxWidth {
+					line += word[0 : wl-j]
+					words[i] = word[wl-j:]
+					break
+				}
+			}
+
+			return line, lineWidth, words[i:]
+		}
 
 		// Include space before word if not first word in the line
 		additionalWidth := wordWidth

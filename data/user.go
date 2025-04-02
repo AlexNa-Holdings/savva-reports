@@ -7,6 +7,7 @@ import (
 	"image"
 	"log"
 	"math/big"
+	"strings"
 
 	"github.com/AlexNa-Holdings/savva-reports/assets"
 	"github.com/AlexNa-Holdings/savva-reports/cmn"
@@ -130,4 +131,17 @@ func (u *User) GetDisplayName() string {
 	}
 
 	return ""
+}
+
+func (u *User) BestName() string {
+	if u.Name != "" {
+		return strings.ToUpper(u.Name) + "\u00AE"
+	}
+
+	dn := u.GetDisplayName()
+	if dn != "" {
+		return dn
+	}
+
+	return u.Address[0:6] + "..." + u.Address[len(u.Address)-4:]
 }

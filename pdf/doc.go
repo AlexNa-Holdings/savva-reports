@@ -1,6 +1,8 @@
 package pdf
 
 import (
+	"image"
+
 	"github.com/AlexNa-Holdings/savva-reports/assets"
 	"github.com/AlexNa-Holdings/savva-reports/data"
 	"github.com/AlexNa-Holdings/savva-reports/i18n"
@@ -29,22 +31,34 @@ type Color struct {
 var SAVVA_COLOR Color = Color{0xff, 0x71, 0x00}
 var SAVVA_DARK_COLOR Color = Color{0xc4, 0x80, 0x00}
 
+type Section struct {
+	Title       string
+	Page        int
+	SubSections []Section
+}
+
 type Doc struct { // Extended gopdf.GoPdf
 	*gopdf.GoPdf
-	Locale                string
-	CurentPage            int
-	UserAddress           string
-	margins               PaddingDescription
-	pageWidth, pageHeight float64
-	indent                int
-	indentWidth           float64
-	skip_newline          bool
-	style                 Style
-	styles                []Style
+	Locale      string
+	CurentPage  int
+	UserAddress string
+	Sections    []Section
+
+	Margins                            PaddingDescription
+	PageWidth, PageHeight              float64
+	Section, SubSection, SubSubSection int
 
 	// data
 	History   []data.HistoryRecord
 	Sponsored []data.Sponsored
+
+	// internal
+	indent       int
+	indentWidth  float64
+	skip_newline bool
+	style        Style
+	styles       []Style
+	GetImage     func(string) (image.Image, error)
 }
 
 func NewDoc(user_addr, locale string) (*Doc, error) {
@@ -60,13 +74,15 @@ func NewDoc(user_addr, locale string) (*Doc, error) {
 			FontColor: &Color{0, 0, 0},
 		},
 		indentWidth: 20,
+		Section:     -1,
+		SubSection:  -1,
 	}
 
 	doc.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
 
 	doc.SetMargins(0, 0, 0, 0) // No margins
 
-	doc.pageWidth, doc.pageHeight = gopdf.PageSizeA4.W, gopdf.PageSizeA4.H
+	doc.PageWidth, doc.PageHeight = gopdf.PageSizeA4.W, gopdf.PageSizeA4.H
 
 	// Load all fonts
 	for name, font := range assets.AllFonts {
@@ -125,8 +141,15 @@ func (doc *Doc) restoreStyle() {
 }
 
 func (doc *Doc) GetMarginWidth() float64 {
-	return doc.pageWidth - doc.margins.Left - doc.margins.Right
+	return doc.PageWidth - doc.Margins.Left - doc.Margins.Right
 }
+
 func (doc *Doc) GetMarginHeight() float64 {
-	return doc.pageHeight - doc.margins.Top - doc.margins.Bottom
+	return doc.PageHeight - doc.Margins.Top - doc.Margins.Bottom
+}
+
+func (doc *Doc) AssureVertialSpace(h float64) {
+	if doc.GetY()+h > doc.PageHeight-doc.Margins.Bottom {
+		doc.NextPage()
+	}
 }

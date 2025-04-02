@@ -17,7 +17,6 @@ var lang_en = Language{
 	},
 	Dictionary: map[string]string{
 		"monthley_report":    "Monthly Report",
-		"section_summary":    "Summary",
 		"legal_notice_title": "Legal Notice",
 		"legal_notice": `This report provides a record of transactions involving the SAVVA crypto token. You should carefully note the following:
 
@@ -33,8 +32,10 @@ var lang_en = Language{
 
 * **Price Fluctuations:** The price of the SAVVA token can and will change unpredictably, and past performance is not indicative of future results.
 `,
-		"description":                   "Description",
-		"summary_introduction":          "This report provides a summary of your SAVVA account activity from *%s* to *%s*.",
+		"description": "Description",
+
+		"summary.title":                 "Summary",
+		"summary.introduction":          "This report provides a summary of your SAVVA account activity from *%s* to *%s*.",
 		"summary.savva_in":              "Deposited to the account",
 		"summary.savva_out":             "Sent from the account",
 		"summary.donations_contribute":  "Donations Contributed",
@@ -53,11 +54,18 @@ var lang_en = Language{
 		"summary.nft_sold_received":     "NFT Sold Received",
 		"summary.nft_auctions_bids":     "NFT Auctions Bids",
 		"summary.nft_auctions_received": "NFT Auctions Received",
-		"section_my_authors":            "My Authors",
-		"my_authors_introduction":       "These are the SAVVA users you support. The weekly payment amounts reflect the values at the time this report was generated. Your total weekly support is %s.",
-		"account":                       "Account",
-		"total":                         "Total",
-		"my_share":                      "My Share",
+
+		"sponsored.title":        "My Sponsored Users",
+		"sponsored.introduction": "These are the SAVVA users you support. The weekly payment amounts reflect the values at the time this report was generated. Your total weekly support is %s.",
+
+		"authors.title":        "My Authors",
+		"authors.introduction": "In this section you can see some posts from authors you supported.",
+
+		"account":  "Account",
+		"total":    "Total",
+		"my_share": "My Share",
+		"posted":   "Posted",
+		"domain":   "Domain",
 	},
 }
 

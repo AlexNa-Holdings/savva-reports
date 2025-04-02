@@ -2,19 +2,23 @@ package pdf
 
 import (
 	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
 	"math"
 	"math/big"
 	"strings"
 	"time"
 
 	"github.com/AlexNa-Holdings/savva-reports/cmn"
+	"github.com/signintech/gopdf"
 )
 
 func (doc *Doc) TextCentered(text string, x, y float64) {
 	// Center the text horizontally
 
 	if x == 0 { // use center of margins
-		x = (doc.pageWidth-doc.margins.Left-doc.margins.Right)/2 + doc.margins.Left
+		x = (doc.PageWidth-doc.Margins.Left-doc.Margins.Right)/2 + doc.Margins.Left
 	}
 	textWidth, _ := doc.MeasureTextWidth(text)
 	doc.SetXY(x-(textWidth/2), y)
@@ -59,22 +63,22 @@ func (doc *Doc) NextPage() {
 	doc.AddPage()
 	doc.CurentPage++
 
-	doc.margins.Top = 80
-	doc.margins.Bottom = 60
+	doc.Margins.Top = 80
+	doc.Margins.Bottom = 60
 
 	if doc.CurentPage&1 == 1 {
-		doc.margins.Left = 40
-		doc.margins.Right = 60
+		doc.Margins.Left = 40
+		doc.Margins.Right = 60
 	} else {
-		doc.margins.Left = 60
-		doc.margins.Right = 40
+		doc.Margins.Left = 60
+		doc.Margins.Right = 40
 	}
 
 	doc.Header()
 	doc.Footer()
 
-	doc.SetX(doc.margins.Left)
-	doc.SetY(doc.margins.Top)
+	doc.SetX(doc.Margins.Left)
+	doc.SetY(doc.Margins.Top)
 	doc.NewLine()
 
 }
@@ -86,9 +90,9 @@ func (doc *Doc) Header() {
 	doc.SetFont("Arial", "", 12)
 
 	if doc.CurentPage&1 == 1 {
-		doc.TextRight(text, doc.pageWidth-doc.margins.Right+20, doc.margins.Top-20)
+		doc.TextRight(text, doc.PageWidth-doc.Margins.Right+20, doc.Margins.Top-20)
 	} else {
-		doc.TextLeft(text, doc.margins.Left-20, doc.margins.Top-20)
+		doc.TextLeft(text, doc.Margins.Left-20, doc.Margins.Top-20)
 	}
 }
 func (doc *Doc) Footer() {
@@ -97,12 +101,12 @@ func (doc *Doc) Footer() {
 	doc.TextCentered(fmt.Sprintf("Generated on: %s",
 		time.Now().UTC().Format(time.RFC822)),
 		0,
-		cmn.PageHeight-doc.margins.Bottom+10)
+		cmn.PageHeight-doc.Margins.Bottom+10)
 }
 
 func (doc *Doc) NewLine() {
 	doc.SetY(doc.GetY() + doc.style.FontSize*1.3)
-	doc.SetX(doc.margins.Left + float64(doc.indent)*doc.indentWidth)
+	doc.SetX(doc.Margins.Left + float64(doc.indent)*doc.indentWidth)
 }
 
 func (doc *Doc) NewNLines(n int) {
@@ -210,7 +214,7 @@ func (doc *Doc) writeTextInWidth(text string, x, y, width float64, style *Style)
 			y += lineHeight
 
 			// Page break check
-			if doc.GetY() > doc.pageHeight-doc.margins.Bottom {
+			if doc.GetY() > doc.PageHeight-doc.Margins.Bottom {
 				doc.NextPage()
 			}
 		} else {
@@ -362,4 +366,118 @@ func (doc *Doc) FormatFiat(value float64) string {
 	}
 
 	return cmn.C.CurrencySymbol + str
+}
+
+// DrawImageCover crops and scales the image to cover the given area.
+func (doc *Doc) DrawImageCover(img image.Image, x, y, targetW, targetH float64) error {
+	bounds := img.Bounds()
+	imgW := float64(bounds.Dx())
+	imgH := float64(bounds.Dy())
+
+	// Calculate aspect ratios
+	targetRatio := targetW / targetH
+	imageRatio := imgW / imgH
+
+	var cropRect image.Rectangle
+
+	if imageRatio > targetRatio {
+		// Image is wider than target: crop horizontally
+		newWidth := int(targetRatio * imgH)
+		startX := (bounds.Dx() - newWidth) / 2
+		cropRect = image.Rect(startX, 0, startX+newWidth, bounds.Dy())
+	} else {
+		// Image is taller than target: crop vertically
+		newHeight := int(imgW / targetRatio)
+		startY := (bounds.Dy() - newHeight) / 2
+		cropRect = image.Rect(0, startY, bounds.Dx(), startY+newHeight)
+	}
+
+	// Crop the image
+	croppedImg := image.NewRGBA(image.Rect(0, 0, cropRect.Dx(), cropRect.Dy()))
+	draw.Draw(croppedImg, croppedImg.Bounds(), img, cropRect.Min, draw.Src)
+
+	// Draw it scaled into the target rect
+	return doc.ImageFrom(croppedImg, x, y, &gopdf.Rect{W: targetW, H: targetH})
+}
+
+func (doc *Doc) DrawBigImage(img image.Image) error {
+	img = EnsureRGBA(img)
+
+	bounds := img.Bounds()
+	imgW := float64(bounds.Dx())
+	imgH := float64(bounds.Dy())
+
+	// Maximum drawable width and height within margins
+	maxW := doc.PageWidth - doc.Margins.Left - doc.Margins.Right
+	maxH := doc.PageHeight - doc.Margins.Bottom - doc.Margins.Top
+
+	// Calculate scale factor (only shrink)
+	scaleX := maxW / imgW
+	scaleY := maxH / imgH
+	scale := math.Min(scaleX, scaleY)
+
+	// Never enlarge
+	if scale > 1 {
+		scale = 1
+	}
+
+	// Final dimensions
+	drawW := imgW * scale
+	drawH := imgH * scale
+
+	// Check if there's enough space on this page
+	if doc.GetY()+drawH > doc.PageHeight-doc.Margins.Bottom {
+		doc.NextPage()
+	}
+
+	// Center horizontally
+	x := doc.Margins.Left + (maxW-drawW)/2
+	y := doc.GetY()
+
+	// Draw the image
+	err := doc.ImageFrom(img, x, y, &gopdf.Rect{W: drawW, H: drawH})
+	if err != nil {
+		return err
+	}
+
+	// Move cursor below the image
+	doc.SetY(doc.GetY() + drawH + 5)
+	return nil
+}
+
+// EnsureRGBA checks if the image is already an 8-bit RGBA-compatible image,
+// and converts it only if needed.
+func EnsureRGBA(src image.Image) *image.RGBA {
+	// If already *image.RGBA, return as-is
+	if rgba, ok := src.(*image.RGBA); ok {
+		return rgba
+	}
+
+	// If already *image.NRGBA (which Go also handles fine), convert safely
+	if nrgba, ok := src.(*image.NRGBA); ok {
+		bounds := nrgba.Bounds()
+		dst := image.NewRGBA(bounds)
+		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+			for x := bounds.Min.X; x < bounds.Max.X; x++ {
+				dst.Set(x, y, nrgba.At(x, y))
+			}
+		}
+		return dst
+	}
+
+	// If other formats (possibly 16-bit or unsupported), convert pixel-by-pixel
+	bounds := src.Bounds()
+	dst := image.NewRGBA(bounds)
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			r, g, b, a := src.At(x, y).RGBA()
+			dst.Set(x, y, color.RGBA{
+				R: uint8(r >> 8),
+				G: uint8(g >> 8),
+				B: uint8(b >> 8),
+				A: uint8(a >> 8),
+			})
+		}
+	}
+	return dst
 }

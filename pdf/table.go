@@ -89,7 +89,7 @@ func (doc *Doc) WriteTable(t *Table) {
 
 	n_zero_width_columns := 0
 	total_width := 0.
-	table_x := doc.margins.Left
+	table_x := doc.Margins.Left
 	for i := 0; i < t.W; i++ {
 		total_width += t.ColWidths[i]
 		if t.ColWidths[i] == 0 {
@@ -107,7 +107,7 @@ func (doc *Doc) WriteTable(t *Table) {
 		}
 		total_width = doc.GetMarginWidth()
 	} else {
-		table_x = doc.margins.Left + (doc.GetMarginWidth()-total_width)/2
+		table_x = doc.Margins.Left + (doc.GetMarginWidth()-total_width)/2
 	}
 
 	table_y := doc.GetY()
@@ -116,7 +116,7 @@ func (doc *Doc) WriteTable(t *Table) {
 	header_height := doc.estimateHeaderHeight(t)
 	first_row_height := doc.estimateRowHeight(t, 0)
 
-	if doc.GetY()+header_height+first_row_height > doc.pageHeight-doc.margins.Bottom {
+	if doc.GetY()+header_height+first_row_height > doc.PageHeight-doc.Margins.Bottom {
 		doc.NextPage()
 		table_y = doc.GetY()
 		y = table_y
@@ -146,7 +146,7 @@ func (doc *Doc) WriteTable(t *Table) {
 
 		row_height := doc.estimateRowHeight(t, i)
 
-		if y+row_height > doc.pageHeight-doc.margins.Bottom {
+		if y+row_height > doc.PageHeight-doc.Margins.Bottom {
 			// may be add later ..continue to next page
 
 			// Draw the border around the table
@@ -161,9 +161,9 @@ func (doc *Doc) WriteTable(t *Table) {
 			doc.Line(v_x, table_y, v_x, y)               // right
 			doc.Line(table_x, y, table_x+total_width, y) // bottom
 
-			table_x -= doc.margins.Left
+			table_x -= doc.Margins.Left
 			doc.NextPage()
-			table_x += doc.margins.Left
+			table_x += doc.Margins.Left
 			table_y = doc.GetY()
 
 			y = table_y
