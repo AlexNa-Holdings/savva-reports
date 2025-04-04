@@ -51,9 +51,6 @@ func (doc *Doc) renderNode(n *html.Node, x, y, w, h float64, auto_page bool, fon
 		doc.handleElementStart(n, x, fontSize)
 	case html.TextNode:
 		if n.Data != "" {
-
-			log.Debug().Msgf("Text: %s", n.Data)
-
 			x, y, w, h = doc.writeText(n.Data, x, y, w, h, auto_page)
 		}
 	}
@@ -113,7 +110,7 @@ func (doc *Doc) writeText(text string, x, y, w, h float64, auto_page bool) (floa
 
 func (doc *Doc) handleElementStart(n *html.Node, x, fontSize float64) {
 
-	log.Debug().Msgf("< %s", n.Data)
+	// log.Debug().Msgf("< %s", n.Data)
 
 	doc.saveStyle()
 
@@ -176,7 +173,7 @@ func (doc *Doc) handleElementStart(n *html.Node, x, fontSize float64) {
 }
 
 func (doc *Doc) handleElementEnd(n *html.Node, x float64) {
-	log.Debug().Msgf("> %s", n.Data)
+	// log.Debug().Msgf("> %s", n.Data)
 
 	switch n.Data {
 	case "strong", "em":
