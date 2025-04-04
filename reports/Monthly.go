@@ -14,7 +14,7 @@ import (
 	"github.com/signintech/gopdf"
 )
 
-func Build(user_addr string, year, month int, output_path string, locale string) error {
+func BuildMonthly(user_addr string, year, month int, output_path string, locale string) error {
 
 	if month < 1 || month > 12 {
 		log.Printf("Invalid month: %d", month)
