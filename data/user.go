@@ -29,11 +29,11 @@ type User struct {
 	Profiles   map[string]UserProfile // domaion -> profile
 }
 
-var userCache = cmn.NewCache[string, *User](100)
+var UserCache = cmn.NewCache[string, *User](100)
 
 func GetUser(address string) (*User, error) {
 	// Check if the user is already cached
-	if o, found := userCache.Get(address); found {
+	if o, found := UserCache.Get(address); found {
 		return o, nil
 	}
 

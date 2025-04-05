@@ -56,3 +56,8 @@ func (c *Cache[K, V]) evict() {
 		delete(c.items, ent.key)
 	}
 }
+
+func (c *Cache[K, V]) Clear() {
+	c.evictList.Init()
+	c.items = make(map[K]*list.Element)
+}
