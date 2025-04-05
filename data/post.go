@@ -134,13 +134,9 @@ func LoadPostInfo(post *Post) error {
 	}
 	version := matches[1]
 
-	log.Trace().Msgf("SavvaSpecVersion: %s", version)
-
 	switch {
 	case version == "2.0":
 		err := yaml.Unmarshal(fileContent, &post.c_v2_0)
-
-		log.Trace().Msgf("spec version 2.0: %s", post.c_v2_0.SpecVersion)
 
 		if err != nil {
 			log.Error().Msgf("Cannot unmarshal info.yaml from IPFS. CID:(%s) Error:(%v)", post.Ipfs, err)
