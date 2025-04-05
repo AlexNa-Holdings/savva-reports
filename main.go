@@ -51,7 +51,7 @@ func main() {
 
 	defer cmn.C.DB.Close()
 
-	err = reports.BuildMonthly("0xDf691828859e3Cb1e31E6D2F8A9b04F3B91A717f", 2025, 2, "AlexNaMonth.pdf", "en")
+	err = reports.BuildMonthly("0xDf691828859e3Cb1e31E6D2F8A9b04F3B91A717f", 2025, 3, "AlexNaMonth.pdf", "en")
 	//err = reports.Build("0x86002b3616cD8F8DC4C3cAC51571d833810B2718", 2025, 2, "IgorMonth.pdf", "en")
 	//err = reports.Build("0xd20CEB10C3e90ba880c0a3824C9bcD1623F5D39A", 2025, 2, "AnelaMonth.pdf", "ru")
 
