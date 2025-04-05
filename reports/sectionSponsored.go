@@ -17,6 +17,15 @@ const AVATAR_SIZE = 100.
 
 func addSectionSponsored(doc *pdf.Doc, from, to time.Time) {
 
+	if doc.History == nil {
+		var err error
+		doc.History, err = data.GetHistory(doc.UserAddress, &from, &to)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to fetch history")
+			return
+		}
+	}
+
 	if doc.Sponsored == nil {
 		var err error
 		doc.Sponsored, err = data.GetSponsoredBy(doc.UserAddress)
@@ -27,6 +36,7 @@ func addSectionSponsored(doc *pdf.Doc, from, to time.Time) {
 	}
 
 	if len(doc.Sponsored) == 0 {
+		log.Info().Msg("No sponsored data found")
 		return // skip the section
 	}
 
@@ -37,15 +47,6 @@ func addSectionSponsored(doc *pdf.Doc, from, to time.Time) {
 
 	// Add a new section for the summary
 	doc.NewSection(doc.T("sponsored.title"))
-
-	if doc.History == nil {
-		var err error
-		doc.History, err = data.GetHistory(doc.UserAddress, &from, &to)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to fetch history")
-			return
-		}
-	}
 
 	doc.MarkDownToPdf(fmt.Sprintf(doc.T("sponsored.introduction"), doc.FormatValue(total, 18)) + " SAVVA (" + doc.FormatFiat(pdf.Value2Float(total, 18)*cmn.C.SavvaTokenPrice) + ")")
 	doc.NewLine()
