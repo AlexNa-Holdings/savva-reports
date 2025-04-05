@@ -1,7 +1,6 @@
 package data
 
 import (
-	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -171,14 +170,8 @@ func (p *Post) LoadThumbnail() error {
 		dp = "/" + dp
 	}
 
-	thumbnail := cmn.C.IPFS(p.Ipfs + dp)
-	if thumbnail == nil {
-		log.Error().Msgf("Failed to load thumbnail for post %s", p.SavvaCid)
-		return fmt.Errorf("failed to load thumbnail for post %s", p.SavvaCid)
-	}
-
 	var err error
-	p.ThumbnailImg, _, err = image.Decode(bytes.NewReader(thumbnail))
+	p.ThumbnailImg, err = cmn.LoadImage(p.Ipfs + dp)
 	if err != nil {
 		log.Error().Msgf("Failed to decode thumbnail for post %s", p.SavvaCid)
 		return fmt.Errorf("failed to decode thumbnail for post %s", p.SavvaCid)
@@ -246,27 +239,9 @@ func (p *Post) GetContent(locale string) (string, error) {
 }
 
 func (p *Post) GetImage(url string) (image.Image, error) {
-	if p.c_v2_0.SpecVersion == "2.0" {
-		l, ok := p.GetLocale("en")
-		if ok {
-			if l.Data == "" {
-
-				if !strings.HasPrefix(url, "/") {
-					url = "/" + url
-				}
-
-				content := cmn.C.IPFS(p.Ipfs + url)
-				if content == nil {
-					return nil, fmt.Errorf("failed to load content for post %s", p.SavvaCid)
-				}
-
-				img, _, err := image.Decode(bytes.NewReader(content))
-				if err != nil {
-					return nil, fmt.Errorf("failed to decode image for post %s", p.SavvaCid)
-				}
-				return img, nil
-			}
-		}
+	if !strings.HasPrefix(url, "/") {
+		url = "/" + url
 	}
-	return nil, fmt.Errorf("failed to get image for post %s", p.SavvaCid)
+
+	return cmn.LoadImage(p.Ipfs + url)
 }

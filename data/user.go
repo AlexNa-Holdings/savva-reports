@@ -1,7 +1,6 @@
 package data
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/json"
 	"image"
@@ -67,16 +66,10 @@ func GetUser(address string) (*User, error) {
 
 	// load the avatar from IPFS
 	if user.AvatarCid != "" {
-		data := cmn.C.IPFS(user.AvatarCid)
-		if data == nil {
-			log.Printf("Error loading IPFS file for user %s: %s", address, user.AvatarCid)
-		}
-		user.AvatarData = data
+		user.AvatarImg, err = cmn.LoadImage(user.AvatarCid)
 	}
 
-	user.AvatarImg, _, err = image.Decode(bytes.NewReader(user.AvatarData))
-	if err != nil {
-		log.Printf("Error decoding avatar image for user %s: %v", address, err)
+	if user.AvatarImg == nil {
 		user.AvatarImg = assets.AvatarDefaultImg
 	}
 

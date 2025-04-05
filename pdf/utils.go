@@ -3,7 +3,6 @@ package pdf
 import (
 	"fmt"
 	"image"
-	"image/color"
 	"image/draw"
 	"math"
 	"math/big"
@@ -385,8 +384,6 @@ func (doc *Doc) DrawImageCover(img image.Image, x, y, targetW, targetH float64) 
 }
 
 func (doc *Doc) DrawBigImage(img image.Image) error {
-	img = EnsureRGBA(img)
-
 	bounds := img.Bounds()
 	imgW := float64(bounds.Dx())
 	imgH := float64(bounds.Dy())
@@ -429,41 +426,9 @@ func (doc *Doc) DrawBigImage(img image.Image) error {
 	return nil
 }
 
-// EnsureRGBA checks if the image is already an 8-bit RGBA-compatible image,
-// and converts it only if needed.
-func EnsureRGBA(src image.Image) *image.RGBA {
-	// If already *image.RGBA, return as-is
-	if rgba, ok := src.(*image.RGBA); ok {
-		return rgba
-	}
-
-	// If already *image.NRGBA (which Go also handles fine), convert safely
-	if nrgba, ok := src.(*image.NRGBA); ok {
-		bounds := nrgba.Bounds()
-		dst := image.NewRGBA(bounds)
-		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-			for x := bounds.Min.X; x < bounds.Max.X; x++ {
-				dst.Set(x, y, nrgba.At(x, y))
-			}
-		}
-		return dst
-	}
-
-	// If other formats (possibly 16-bit or unsupported), convert pixel-by-pixel
-	bounds := src.Bounds()
-	dst := image.NewRGBA(bounds)
-	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			r, g, b, a := src.At(x, y).RGBA()
-			dst.Set(x, y, color.RGBA{
-				R: uint8(r >> 8),
-				G: uint8(g >> 8),
-				B: uint8(b >> 8),
-				A: uint8(a >> 8),
-			})
-		}
-	}
-	return dst
+func (doc *Doc) EclipseToWidthWithStyle(s string, width float64, style *Style) (string, float64) {
+	doc.SetDocFont(style.FontName, style.FontSize)
+	return doc.EclipseToWidth(s, width)
 }
 
 func (doc *Doc) EclipseToWidth(s string, width float64) (string, float64) {
@@ -486,9 +451,4 @@ func (doc *Doc) EclipseToWidth(s string, width float64) (string, float64) {
 	}
 
 	return truncated + ellipsis, textWidth
-}
-
-func (doc *Doc) EclipseToWidthWithStyle(s string, width float64, style *Style) (string, float64) {
-	doc.SetDocFont(style.FontName, style.FontSize)
-	return doc.EclipseToWidth(s, width)
 }
